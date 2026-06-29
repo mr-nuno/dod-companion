@@ -22,7 +22,7 @@ public class CreateLogEntryHandlerTests
     {
         _userSession.IsAuthenticated.Returns(false);
 
-        var result = await CreateHandler().Handle(new CreateLogEntryCommand("hello"), CancellationToken.None);
+        var result = await CreateHandler().Handle(new CreateLogEntryCommand("hello", []), CancellationToken.None);
 
         result.Status.ShouldBe(ResultStatus.Unauthorized);
         await _db.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
@@ -37,7 +37,7 @@ public class CreateLogEntryHandlerTests
         _userSession.PlayerName.Returns("Aragorn");
         _clock.UtcNow.Returns(now);
 
-        var result = await CreateHandler().Handle(new CreateLogEntryCommand("  found gold  "), CancellationToken.None);
+        var result = await CreateHandler().Handle(new CreateLogEntryCommand("  found gold  ", []), CancellationToken.None);
 
         result.IsSuccess.ShouldBeTrue();
         result.Value.Content.ShouldBe("found gold");

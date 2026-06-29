@@ -160,7 +160,7 @@ public class SessionFlowTests(DodCompanionApiFactory factory) : IClassFixture<Do
 
     // Local request/response shapes (avoid coupling tests to API endpoint records).
     private sealed record CreateSessionRequestBody(string RoomName, string HostKey);
-    private sealed record JoinSessionRequestBody(string JoinToken, string PlayerName);
+    private sealed record JoinSessionRequestBody(string JoinToken, string PlayerName, int Kp = 10, int UpptackFara = 10, int FinnaDoldaTing = 10);
     private sealed record CreateLogEntryBody(string Content);
     private sealed record CreatedRoomBody(string SessionId, string RoomCode, string JoinToken);
     private sealed record SessionBody(string SessionId, string RoomCode, string PlayerName, string JoinToken);

@@ -35,9 +35,16 @@ export const RuleSearchPanel = () => {
 
       {result && (
         <div className="space-y-3">
-          <p className="text-xs text-charcoal-400 dark:text-bonewhite-300/60">
-            {result.totalHits} result{result.totalHits === 1 ? '' : 's'} for “{result.query}”
-          </p>
+          <div>
+            <p className="text-xs text-charcoal-400 dark:text-bonewhite-300/60">
+              {result.totalHits} result{result.totalHits === 1 ? '' : 's'} for "{result.query}"
+            </p>
+            {result.processedQuery && result.processedQuery !== result.query && (
+              <p className="text-xs italic text-charcoal-400 dark:text-bonewhite-300/50">
+                Interpreted as: "{result.processedQuery}"
+              </p>
+            )}
+          </div>
           {result.results.map((hit, index) => (
             <article
               key={`${hit.sourceFileName}-${hit.physicalPageNumber}-${index}`}
@@ -51,10 +58,29 @@ export const RuleSearchPanel = () => {
                   {hit.sourceFileName} · p.{hit.physicalPageNumber}
                 </span>
               </header>
+
+              {hit.tags.length > 0 && (
+                <div className="mb-2 flex flex-wrap gap-1">
+                  {hit.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-full bg-runecyan-500/15 px-2 py-0.5 text-xs font-semibold text-runecyan-700 dark:text-runecyan-400"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
               <div className="prose prose-sm max-w-none dark:prose-invert">
                 <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>
                   {hit.content}
                 </Markdown>
+              </div>
+
+              <div className="mt-3 flex items-center gap-2 text-xs text-charcoal-400 dark:text-bonewhite-300/50">
+                <span>Relevans:</span>
+                <span className="font-mono">{(Math.round(hit.searchScore * 10) / 10).toFixed(1)}</span>
               </div>
             </article>
           ))}

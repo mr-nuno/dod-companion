@@ -3,8 +3,10 @@ import type {
   ApiResponse,
   CreatedRoom,
   LogEntry,
+  PlayersResponse,
   RuleSearchResult,
   Session,
+  SessionSummary,
   TimelineResponse,
 } from '@/types';
 
@@ -45,18 +47,26 @@ export const apiClient = {
   createSession: (roomName: string, hostKey: string) =>
     request<CreatedRoom>('/sessions/create', jsonBody({ roomName, hostKey })),
 
-  joinSession: (joinToken: string, playerName: string) =>
-    request<Session>('/sessions/join', jsonBody({ joinToken, playerName })),
+  joinSession: (joinToken: string, playerName: string, kp: number, upptackFara: number, finnaDoldaTing: number) =>
+    request<Session>('/sessions/join', jsonBody({ joinToken, playerName, kp, upptackFara, finnaDoldaTing })),
 
   getMe: () => request<Session>('/sessions/me'),
 
   logout: () => request<unknown>('/sessions/logout', { method: 'POST' }),
 
-  createLogEntry: (content: string) =>
-    request<LogEntry>('/log-entries', jsonBody({ content })),
+  getPlayers: () => request<PlayersResponse>('/sessions/players'),
+
+  createLogEntry: (content: string, tags: string[]) =>
+    request<LogEntry>('/log-entries', jsonBody({ content, tags })),
 
   getTimeline: () => request<TimelineResponse>('/log-entries'),
 
   searchRules: (query: string) =>
     request<RuleSearchResult>(`/rules/search?query=${encodeURIComponent(query)}`),
+
+  generateSummary: () =>
+    request<SessionSummary>('/sessions/summary', { method: 'POST' }),
+
+  getSummary: () =>
+    request<SessionSummary>('/sessions/summary'),
 };

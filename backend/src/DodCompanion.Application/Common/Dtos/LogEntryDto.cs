@@ -9,4 +9,5 @@ public sealed record LogEntryDto(
     string SessionId,
     string PlayerName,
     string Content,
-    DateTimeOffset Timestamp);
+    DateTimeOffset Timestamp,
+    IReadOnlyList<string> Tags);

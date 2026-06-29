@@ -11,7 +11,7 @@ namespace DodCompanion.Application.Features.LogEntries.CreateLogEntry;
 /// Creates a timeline log entry for the current player's session, then broadcasts it to connected players.
 /// Session and player are taken from the auth cookie via <see cref="IUserSession"/> — never from the request.
 /// </summary>
-public sealed record CreateLogEntryCommand(string Content) : IRequest<Result<LogEntryDto>>
+public sealed record CreateLogEntryCommand(string Content, IReadOnlyList<string> Tags) : IRequest<Result<LogEntryDto>>
 {
     public sealed class Handler(
         IApplicationDbContext db,
@@ -30,7 +30,8 @@ public sealed record CreateLogEntryCommand(string Content) : IRequest<Result<Log
                 userSession.SessionId,
                 userSession.PlayerName,
                 request.Content.Trim(),
-                clock.UtcNow);
+                clock.UtcNow,
+                request.Tags);
 
             await db.StoreAsync(entry, ct);
             await db.SaveChangesAsync(ct);
@@ -44,11 +45,18 @@ public sealed record CreateLogEntryCommand(string Content) : IRequest<Result<Log
 
     public sealed class Validator : AbstractValidator<CreateLogEntryCommand>
     {
+        private static readonly HashSet<string> AllowedTags = new(StringComparer.OrdinalIgnoreCase)
+            { "Strid", "Loot", "Event", "Anteckning", "Dödsfall" };
+
         public Validator()
         {
             RuleFor(x => x.Content)
                 .NotEmpty().WithMessage("Log entry content is required.")
                 .MaximumLength(4000).WithMessage("Log entry must be 4000 characters or fewer.");
+
+            RuleFor(x => x.Tags)
+                .Must(tags => tags.Count <= 5).WithMessage("A log entry may have at most 5 tags.")
+                .Must(tags => tags.All(t => AllowedTags.Contains(t))).WithMessage("One or more tags are not valid.");
         }
     }
 }

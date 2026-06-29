@@ -5,6 +5,9 @@ namespace DodCompanion.UnitTests.Domain;
 
 public class SessionAggregateTests
 {
+    private static PlayerInfo Player(string name, int kp = 10, int upf = 10, int fdt = 10) =>
+        new(name, kp, upf, fdt);
+
     [Fact]
     public void Create_Should_SetRoomCodeTokenAndCreatedAt_When_Constructed()
     {
@@ -23,9 +26,9 @@ public class SessionAggregateTests
     {
         var session = SessionAggregate.Create("DRAGON", "join-token-123", DateTimeOffset.UtcNow);
 
-        session.Join("Aragorn");
+        session.Join(Player("Aragorn"));
 
-        session.Players.ShouldContain("Aragorn");
+        session.Players.ShouldContain(p => p.Name == "Aragorn");
     }
 
     [Fact]
@@ -33,9 +36,10 @@ public class SessionAggregateTests
     {
         var session = SessionAggregate.Create("DRAGON", "join-token-123", DateTimeOffset.UtcNow);
 
-        session.Join("Aragorn");
-        session.Join("aragorn");
+        session.Join(Player("Aragorn", kp: 12));
+        session.Join(Player("aragorn", kp: 15));
 
         session.Players.Count.ShouldBe(1);
+        session.Players[0].Kp.ShouldBe(15);
     }
 }
