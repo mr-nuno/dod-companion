@@ -13,6 +13,24 @@ public sealed class RulesApiOptions
     /// <summary>How long to cache identical query results, in seconds.</summary>
     public int CacheSeconds { get; init; } = 60;
 
+    private readonly Dictionary<string, int> _pageModifiers = new(StringComparer.OrdinalIgnoreCase);
+
+    public Dictionary<string, int> PageModifiers
+    {
+        get => _pageModifiers;
+        init
+        {
+            _pageModifiers.Clear();
+            if (value != null)
+            {
+                foreach (var kvp in value)
+                {
+                    _pageModifiers[kvp.Key] = kvp.Value;
+                }
+            }
+        }
+    }
+
     public RulesApiAuthOptions Auth { get; init; } = new();
 }
 

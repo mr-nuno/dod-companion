@@ -17,8 +17,10 @@ public class RulesSearchClientTests
             });
     }
 
-    private static RulesSearchClient ClientFor(HttpStatusCode status, string body) =>
-        new(new HttpClient(new StubHandler(status, body)) { BaseAddress = new Uri("https://rules.test/") });
+    private static RulesSearchClient ClientFor(HttpStatusCode status, string body, RulesApiOptions? options = null) =>
+        new(
+            new HttpClient(new StubHandler(status, body)) { BaseAddress = new Uri("https://rules.test/") },
+            Microsoft.Extensions.Options.Options.Create(options ?? new RulesApiOptions()));
 
     [Fact]
     public async Task SearchAsync_Should_MapSuccessfulEnvelope()
@@ -53,6 +55,55 @@ public class RulesSearchClientTests
         hit.PhysicalPageNumber.ShouldBe(42);
         hit.Content.ShouldBe("**Roll initiative**");
         hit.Tags.ShouldContain("combat");
+        hit.PageModifier.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task SearchAsync_Should_MapCorrectPageModifier_For_SpecificPdfs()
+    {
+        const string body = """
+        {
+          "success": true,
+          "data": {
+            "query": "combat",
+            "processedQuery": "combat",
+            "totalHits": 2,
+            "results": [
+              {
+                "sourceFileName": "DoD_Regler_v2-1.pdf",
+                "physicalPageNumber": 10,
+                "header": "Combat Rules",
+                "content": "**Roll initiative**",
+                "tags": ["combat"],
+                "searchScore": 0.95
+              },
+              {
+                "sourceFileName": "dod_regler_v2-1.pdf",
+                "physicalPageNumber": 20,
+                "header": "Combat Rules",
+                "content": "**Roll initiative**",
+                "tags": ["combat"],
+                "searchScore": 0.95
+              }
+            ]
+          }
+        }
+        """;
+
+        var options = new RulesApiOptions
+        {
+            PageModifiers = new Dictionary<string, int>
+            {
+                ["DoD_Regler_v2-1.pdf"] = -2
+            }
+        };
+
+        var result = await ClientFor(HttpStatusCode.OK, body, options).SearchAsync("combat", CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Results.Count.ShouldBe(2);
+        result.Value.Results[0].PageModifier.ShouldBe(-2);
+        result.Value.Results[1].PageModifier.ShouldBe(-2);
     }
 
     [Fact]

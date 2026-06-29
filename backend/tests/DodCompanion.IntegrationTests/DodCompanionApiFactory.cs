@@ -78,6 +78,6 @@ public sealed class DodCompanionApiFactory : WebApplicationFactory<Program>
                 query,
                 null,
                 1,
-                [new RuleSearchHit("rulebook.pdf", 42, "Combat Rules", "**Roll initiative**", ["combat"], 0.95)])));
+                [new RuleSearchHit("rulebook.pdf", 42, "Combat Rules", "**Roll initiative**", ["combat"], 0.95, 0)])));
     }
 }

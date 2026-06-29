@@ -17,4 +17,5 @@ public sealed record RuleSearchHit(
     string? Header,
     string Content,
     IReadOnlyList<string> Tags,
-    double SearchScore);
+    double SearchScore,
+    int PageModifier);
