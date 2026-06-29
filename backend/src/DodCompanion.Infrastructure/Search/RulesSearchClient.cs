@@ -3,6 +3,7 @@ using System.Text.Json;
 using Ardalis.Result;
 using DodCompanion.Application.Common.Dtos;
 using DodCompanion.Application.Common.Interfaces;
+using Microsoft.Extensions.Options;
 using Serilog;
 
 namespace DodCompanion.Infrastructure.Search;
@@ -11,7 +12,7 @@ namespace DodCompanion.Infrastructure.Search;
 /// Typed client over the external Rules/PDF Search API. The Bearer token is attached in DI on the
 /// underlying <see cref="HttpClient"/> — it never crosses into the Application/Domain layers.
 /// </summary>
-public sealed class RulesSearchClient(HttpClient httpClient) : IRulesSearchClient
+public sealed class RulesSearchClient(HttpClient httpClient, IOptions<RulesApiOptions> options) : IRulesSearchClient
 {
     private static readonly ILogger Log = Serilog.Log.ForContext<RulesSearchClient>();
 
@@ -38,7 +39,7 @@ public sealed class RulesSearchClient(HttpClient httpClient) : IRulesSearchClien
                 return Result.Error(envelope?.Error ?? "The rules service returned an unsuccessful response.");
             }
 
-            return Result.Success(Map(envelope.Data));
+            return Result.Success(Map(envelope.Data, options.Value));
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -53,16 +54,20 @@ public sealed class RulesSearchClient(HttpClient httpClient) : IRulesSearchClien
         }
     }
 
-    private static RuleSearchResult Map(SearchApiData data)
+    private static RuleSearchResult Map(SearchApiData data, RulesApiOptions options)
     {
         var hits = (data.Results ?? [])
-            .Select(r => new RuleSearchHit(
-                r.SourceFileName,
-                r.PhysicalPageNumber,
-                r.Header,
-                r.Content,
-                r.Tags ?? [],
-                r.SearchScore))
+            .Select(r => {
+                var pageModifier = options.PageModifiers.TryGetValue(r.SourceFileName, out var mod) ? mod : 0;
+                return new RuleSearchHit(
+                    r.SourceFileName,
+                    r.PhysicalPageNumber,
+                    r.Header,
+                    r.Content,
+                    r.Tags ?? [],
+                    r.SearchScore,
+                    pageModifier);
+            })
             .ToList();
 
         return new RuleSearchResult(data.Query, data.ProcessedQuery, data.TotalHits, hits);

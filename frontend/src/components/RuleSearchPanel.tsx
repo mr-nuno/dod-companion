@@ -55,7 +55,7 @@ export const RuleSearchPanel = () => {
                   {hit.header ?? 'Result'}
                 </h3>
                 <span className="text-xs text-charcoal-400 dark:text-bonewhite-300/60">
-                  {hit.sourceFileName} · p.{hit.physicalPageNumber}
+                  {hit.sourceFileName} · p.{hit.physicalPageNumber + hit.pageModifier}
                 </span>
               </header>
 

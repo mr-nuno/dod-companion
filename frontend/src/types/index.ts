@@ -50,6 +50,7 @@ export interface RuleSearchHit {
   content: string;
   tags: string[];
   searchScore: number;
+  pageModifier: number;
 }
 
 export interface RuleSearchResult {
