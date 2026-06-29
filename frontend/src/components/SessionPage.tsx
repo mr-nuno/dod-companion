@@ -30,14 +30,14 @@ export const SessionPage = ({ session }: SessionPageProps) => {
 
   return (
     <div className="mx-auto flex min-h-full max-w-6xl flex-col p-4">
-      <header className="mb-6 flex items-center justify-between gap-6 rounded-3xl bg-white/60 p-6 shadow-sm backdrop-blur-md dark:bg-charcoal-900/40 dark:shadow-charcoal-900/50">
-        <div className="flex items-center gap-8">
+      <header className="mb-6 flex flex-col gap-4 rounded-3xl bg-white/60 p-4 shadow-sm backdrop-blur-md dark:bg-charcoal-900/40 dark:shadow-charcoal-900/50 sm:p-6 md:flex-row md:items-center md:justify-between md:gap-6">
+        <div className="flex items-center justify-between w-full md:w-auto md:justify-start md:gap-8">
           <img
             src="/dod.png"
             alt="Drakar och Demoner"
-            className="h-20 w-auto drop-shadow-sm transition-transform hover:scale-105 md:h-24"
+            className="h-16 w-auto drop-shadow-sm transition-transform hover:scale-105 sm:h-20 md:h-24"
           />
-          <div className="flex flex-col">
+          <div className="hidden flex-col md:flex">
             <span className="text-sm font-bold uppercase tracking-widest text-charcoal-400 dark:text-charcoal-500">
               Playing As
             </span>
@@ -58,14 +58,43 @@ export const SessionPage = ({ session }: SessionPageProps) => {
               />
             </div>
           </div>
+          <div className="flex items-center gap-2 md:hidden">
+            <ThemeToggle />
+            <button
+              onClick={onLogout}
+              className="rounded-xl border border-transparent bg-bonewhite-100 px-3 py-2 text-xs font-semibold text-charcoal-600 transition-all hover:border-dodred-500 hover:bg-white hover:text-dodred-600 dark:bg-charcoal-800 dark:text-bonewhite-300 dark:hover:border-dodred-500 dark:hover:bg-charcoal-900 dark:hover:text-dodred-400"
+            >
+              Leave
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
+
+        <div className="flex items-center justify-between rounded-2xl bg-white/40 px-4 py-3 dark:bg-charcoal-900/20 md:hidden">
+          <div className="flex flex-col">
+            <span className="text-xs font-bold uppercase tracking-widest text-charcoal-400 dark:text-charcoal-500">
+              Playing As
+            </span>
+            <span className="text-lg font-bold text-dodred-600 dark:text-dodred-500">
+              {session.playerName}
+            </span>
+          </div>
+          <div className="flex flex-col items-end">
+            <span className="text-xs font-bold uppercase tracking-widest text-charcoal-400 dark:text-charcoal-500">
+              Room Code
+            </span>
+            <span className="text-sm font-semibold text-charcoal-600 dark:text-bonewhite-300">
+              {session.roomCode}
+            </span>
+          </div>
+        </div>
+
+        <div className="hidden items-center gap-3 md:flex">
           <ThemeToggle />
           <button
             onClick={onLogout}
             className="rounded-xl border-2 border-transparent bg-bonewhite-100 px-4 py-2 text-sm font-semibold text-charcoal-600 transition-all hover:border-dodred-500 hover:bg-white hover:text-dodred-600 hover:shadow-md dark:bg-charcoal-800 dark:text-bonewhite-300 dark:hover:border-dodred-500 dark:hover:bg-charcoal-900 dark:hover:text-dodred-400"
           >
-            Leave Table
+            Leave
           </button>
         </div>
       </header>

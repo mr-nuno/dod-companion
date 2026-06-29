@@ -70,7 +70,7 @@ export const JoinPage = () => {
 
       <form
         onSubmit={isJoining || showQrStep ? onEnter : onCreate}
-        className="w-full max-w-md space-y-6 rounded-3xl border border-bonewhite-200 bg-white/80 p-10 shadow-2xl backdrop-blur-sm transition-all dark:border-charcoal-700/50 dark:bg-charcoal-900/60 dark:shadow-[0_0_40px_-10px_rgba(227,28,35,0.3)]"
+        className="w-full max-w-md space-y-6 rounded-3xl border border-bonewhite-200 bg-white/80 p-6 sm:p-10 shadow-2xl backdrop-blur-sm transition-all dark:border-charcoal-700/50 dark:bg-charcoal-900/60 dark:shadow-[0_0_40px_-10px_rgba(227,28,35,0.3)]"
       >
         <div className="space-y-4 text-center">
           <img
@@ -119,10 +119,11 @@ export const JoinPage = () => {
                 {createdRoom.roomCode}
               </span>
             </span>
-            <div className="overflow-hidden rounded-2xl bg-white p-5 shadow-md">
+            <div className="overflow-hidden rounded-2xl bg-white p-3 sm:p-5 shadow-md flex justify-center w-full max-w-[280px]">
               <QRCodeSVG
                 value={`${window.location.origin}/?join=${createdRoom.joinToken}`}
                 size={240}
+                className="w-full h-auto max-w-[240px]"
                 bgColor="#ffffff"
                 fgColor="#1c1c1c"
               />
