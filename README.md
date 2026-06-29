@@ -25,7 +25,8 @@ holds all secrets and state; the React frontend never sees API keys or bearer to
 
 ```
 backend/   # .NET solution (Domain / Application / Infrastructure / Api + tests)
-frontend/  # Vite React app (nginx-served in Docker)
+frontend/  # Vite React app (built into the API's wwwroot for Docker)
+Dockerfile # single image: the API serves the built SPA from wwwroot
 docker-compose.yml
 ```
 
@@ -42,8 +43,11 @@ docker compose up --build
 `backend/.env` is gitignored and optional — the stack still starts without it (rule search just
 degrades gracefully until the secret is provided).
 
-- Frontend: http://localhost:8081 (nginx serves the SPA and proxies the API same-origin)
-- API: http://localhost:5116 · RavenDB Studio: http://localhost:8080
+A single image is built from the root `Dockerfile`: a Node stage builds the SPA, a .NET stage
+publishes the API, and the SPA's build output is copied into the API's `wwwroot`. The API then
+serves the SPA and the API endpoints from the same origin — no nginx, no reverse proxy.
+
+- App (SPA + API): http://localhost:8081 · RavenDB Studio: http://localhost:8080
 
 ## Run locally (without Docker)
 

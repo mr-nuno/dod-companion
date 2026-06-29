@@ -39,6 +39,11 @@ app.Use(async (context, next) =>
     await next();
 });
 
+// Serve the React SPA from wwwroot. Static assets are public and resolved before auth,
+// so the bundle loads without a session cookie.
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.UseCors(DodCompanion.Api.DependencyInjection.CorsPolicyName);
 
 app.UseAuthentication();
@@ -64,6 +69,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerGen();
     app.MapScalarApiReference(o => o.WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json"));
 }
+
+// SPA fallback: client-side routes (anything not matched by an API endpoint or static file)
+// resolve to index.html. Registered last so real endpoints always win.
+app.MapFallbackToFile("index.html");
 
 app.Run();
 
