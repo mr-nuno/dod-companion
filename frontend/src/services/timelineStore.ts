@@ -26,6 +26,17 @@ export const timelineStore = {
 
     if (!subscribed) {
       signalrService.logEntries$.subscribe(upsert);
+      signalrService.playerJoined$.subscribe((player) => {
+        const entry: LogEntry = {
+          id: `join-${player.name}-${Date.now()}-${Math.random()}`,
+          sessionId: '',
+          playerName: player.name,
+          content: 'joined the session',
+          timestamp: new Date().toISOString(),
+          tags: ['info'],
+        };
+        upsert(entry);
+      });
       subscribed = true;
     }
 

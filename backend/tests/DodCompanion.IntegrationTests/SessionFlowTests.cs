@@ -158,10 +158,35 @@ public class SessionFlowTests(DodCompanionApiFactory factory) : IClassFixture<Do
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    [SkippableFact]
+    public async Task GenerateSummary_Should_ExcludeInfoTaggedEntries()
+    {
+        var client = CreateClient();
+        await EnterRoomAsync(client, "summary-room", "Gimli");
+
+        var create1 = await client.PostAsJsonAsync("/log-entries", new CreateLogEntryBody("Fought an orc", ["Strid"]));
+        create1.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var create2 = await client.PostAsJsonAsync("/log-entries", new CreateLogEntryBody("Joined the chat", ["info"]));
+        create2.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var generateResponse = await client.PostAsync("/sessions/summary", null);
+        generateResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var summaryEnvelope = await generateResponse.Content.ReadFromJsonAsync<ApiResponse<SessionSummaryDto>>();
+        summaryEnvelope!.Success.ShouldBeTrue();
+        var summary = summaryEnvelope.Data!;
+
+        summary.EntryCount.ShouldBe(1);
+        summary.Content.ShouldContain("Fought an orc");
+        summary.Content.ShouldNotContain("Joined the chat");
+        summary.Content.ShouldNotContain("info");
+    }
+
     // Local request/response shapes (avoid coupling tests to API endpoint records).
     private sealed record CreateSessionRequestBody(string RoomName, string HostKey);
     private sealed record JoinSessionRequestBody(string JoinToken, string PlayerName, int Kp = 10, int UpptackFara = 10, int FinnaDoldaTing = 10);
-    private sealed record CreateLogEntryBody(string Content);
+    private sealed record CreateLogEntryBody(string Content, List<string>? Tags = null);
     private sealed record CreatedRoomBody(string SessionId, string RoomCode, string JoinToken);
     private sealed record SessionBody(string SessionId, string RoomCode, string PlayerName, string JoinToken);
 }

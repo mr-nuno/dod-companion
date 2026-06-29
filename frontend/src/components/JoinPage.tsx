@@ -163,8 +163,8 @@ export const JoinPage = () => {
                   required
                 />
               </label>
-              <label className="block space-y-2">
-                <span className={labelClass}>Uppt. fara</span>
+              <label className="block space-y-2 cursor-help" title="Upptäcka fara">
+                <span className={labelClass}>UF</span>
                 <input
                   type="number"
                   min="1"
@@ -174,8 +174,8 @@ export const JoinPage = () => {
                   required
                 />
               </label>
-              <label className="block space-y-2">
-                <span className={labelClass}>Finna dolda</span>
+              <label className="block space-y-2 cursor-help" title="Finna dolda ting">
+                <span className={labelClass}>FDT</span>
                 <input
                   type="number"
                   min="1"

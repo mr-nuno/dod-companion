@@ -39,7 +39,11 @@ public sealed record GenerateSummaryCommand : IRequest<Result<SessionSummaryDto>
                 .OrderBy(e => e.Timestamp)
                 .ToListAsync(ct);
 
-            var content = BuildMarkdown(session.RoomCode, entries, clock.UtcNow);
+            var filteredEntries = entries
+                .Where(e => !e.Tags.Contains("info", StringComparer.OrdinalIgnoreCase))
+                .ToList();
+
+            var content = BuildMarkdown(session.RoomCode, filteredEntries, clock.UtcNow);
 
             // Upsert: overwrite if a summary already exists for this session.
             var existing = await db.Query<Domain.SessionSummary.SessionSummaryAggregate>()
@@ -48,13 +52,13 @@ public sealed record GenerateSummaryCommand : IRequest<Result<SessionSummaryDto>
             Domain.SessionSummary.SessionSummaryAggregate summary;
             if (existing is not null)
             {
-                existing.Regenerate(content, entries.Count, clock.UtcNow);
+                existing.Regenerate(content, filteredEntries.Count, clock.UtcNow);
                 summary = existing;
             }
             else
             {
                 summary = Domain.SessionSummary.SessionSummaryAggregate.Create(
-                    sessionId, session.RoomCode, content, entries.Count, clock.UtcNow);
+                    sessionId, session.RoomCode, content, filteredEntries.Count, clock.UtcNow);
                 await db.StoreAsync(summary, ct);
             }
 

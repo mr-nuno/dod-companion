@@ -16,6 +16,7 @@ const TAG_COLORS: Record<string, string> = {
   Loot: 'bg-dragongreen-500/15 text-dragongreen-700 dark:text-dragongreen-400',
   Anteckning: 'bg-runecyan-500/15 text-runecyan-700 dark:text-runecyan-400',
   Event: 'bg-charcoal-200/60 text-charcoal-700 dark:bg-charcoal-700/40 dark:text-bonewhite-300',
+  info: 'bg-bonewhite-300/60 text-charcoal-600 dark:bg-charcoal-800/60 dark:text-bonewhite-400',
 };
 
 const tagColor = (tag: string) =>

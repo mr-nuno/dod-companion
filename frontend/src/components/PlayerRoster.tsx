@@ -24,13 +24,19 @@ export const PlayerRoster = () => {
               <span className="font-bold text-charcoal-800 dark:text-bonewhite-200">{player.kp}</span>
               <span>KP</span>
             </div>
-            <div className="flex flex-col items-center rounded bg-bonewhite-100 py-1 dark:bg-charcoal-800">
+            <div
+              className="flex flex-col items-center rounded bg-bonewhite-100 py-1 dark:bg-charcoal-800 cursor-help"
+              title="Upptäcka fara"
+            >
               <span className="font-bold text-charcoal-800 dark:text-bonewhite-200">{player.upptackFara}</span>
-              <span>Uppt.</span>
+              <span>UF</span>
             </div>
-            <div className="flex flex-col items-center rounded bg-bonewhite-100 py-1 dark:bg-charcoal-800">
+            <div
+              className="flex flex-col items-center rounded bg-bonewhite-100 py-1 dark:bg-charcoal-800 cursor-help"
+              title="Finna dolda ting"
+            >
               <span className="font-bold text-charcoal-800 dark:text-bonewhite-200">{player.finnaDoldaTing}</span>
-              <span>Finna</span>
+              <span>FDT</span>
             </div>
           </div>
         </div>
