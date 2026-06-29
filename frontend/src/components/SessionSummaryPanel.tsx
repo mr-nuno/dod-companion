@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
-import { apiClient } from '@services/apiClient';
+import { apiClient, ApiError } from '@services/apiClient';
 import type { SessionSummary } from '@/types';
 
 const formatDate = (iso: string) =>
@@ -12,6 +12,26 @@ export const SessionSummaryPanel = () => {
   const [summary, setSummary] = useState<SessionSummary | null>(null);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    const loadSummary = async () => {
+      try {
+        const result = await apiClient.getSummary();
+        if (active) {
+          setSummary(result);
+        }
+      } catch (err) {
+        if (!(err instanceof ApiError && err.status === 404)) {
+          console.error('Failed to load session summary:', err);
+        }
+      }
+    };
+    void loadSummary();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const onGenerate = async () => {
     setGenerating(true);

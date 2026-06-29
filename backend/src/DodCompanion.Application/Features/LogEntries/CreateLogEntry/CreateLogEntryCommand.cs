@@ -46,7 +46,7 @@ public sealed record CreateLogEntryCommand(string Content, IReadOnlyList<string>
     public sealed class Validator : AbstractValidator<CreateLogEntryCommand>
     {
         private static readonly HashSet<string> AllowedTags = new(StringComparer.OrdinalIgnoreCase)
-            { "Strid", "Loot", "Event", "Anteckning", "Dödsfall" };
+            { "Strid", "Loot", "Event", "Anteckning", "Dödsfall", "info" };
 
         public Validator()
         {
