@@ -33,6 +33,7 @@ services:
       Raven__DatabaseName: DodCompanion
       RulesApi__BaseUrl: https://pdf-search-api-1-0-0.onrender.com
       RulesApi__CacheSeconds: "60"
+      Sessions__CreateKey: abc123
     depends_on:
       ravendb:
         condition: service_healthy

@@ -19,5 +19,14 @@ export const App = () => {
     );
   }
 
+  const urlJoinToken = new URLSearchParams(window.location.search).get('join') ?? '';
+
+  // If the URL carries a join token that doesn't belong to the current session, always
+  // show the join page — this lets a player with a stale session enter a new room without
+  // having to manually log out first.
+  if (urlJoinToken && session?.joinToken !== urlJoinToken) {
+    return <JoinPage />;
+  }
+
   return session ? <SessionPage session={session} /> : <JoinPage />;
 };
