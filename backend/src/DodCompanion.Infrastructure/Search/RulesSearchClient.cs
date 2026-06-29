@@ -65,6 +65,6 @@ public sealed class RulesSearchClient(HttpClient httpClient) : IRulesSearchClien
                 r.SearchScore))
             .ToList();
 
-        return new RuleSearchResult(data.Query, data.TotalHits, hits);
+        return new RuleSearchResult(data.Query, data.ProcessedQuery, data.TotalHits, hits);
     }
 }

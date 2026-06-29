@@ -12,6 +12,7 @@ namespace DodCompanion.Api.Hubs;
 public sealed class TimelineHub : Hub
 {
     public const string LogEntryCreatedEvent = "LogEntryCreated";
+    public const string PlayerJoinedEvent = "PlayerJoined";
 
     public override async Task OnConnectedAsync()
     {

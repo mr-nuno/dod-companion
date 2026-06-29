@@ -13,23 +13,25 @@ public sealed class LogEntryAggregate : IAggregateRoot
     public string PlayerName { get; private set; } = string.Empty;
     public string Content { get; private set; } = string.Empty;
     public DateTimeOffset Timestamp { get; private set; }
+    public IReadOnlyList<string> Tags { get; private set; } = [];
 
     // Parameterless ctor for the RavenDB serializer.
     private LogEntryAggregate()
     {
     }
 
-    private LogEntryAggregate(string sessionId, string playerName, string content, DateTimeOffset timestamp)
+    private LogEntryAggregate(string sessionId, string playerName, string content, DateTimeOffset timestamp, IReadOnlyList<string> tags)
     {
         SessionId = sessionId;
         PlayerName = playerName;
         Content = content;
         Timestamp = timestamp;
+        Tags = tags;
     }
 
     /// <summary>Create a new log entry for a session.</summary>
-    public static LogEntryAggregate Create(string sessionId, string playerName, string content, DateTimeOffset timestamp)
+    public static LogEntryAggregate Create(string sessionId, string playerName, string content, DateTimeOffset timestamp, IReadOnlyList<string>? tags = null)
     {
-        return new LogEntryAggregate(sessionId, playerName, content, timestamp);
+        return new LogEntryAggregate(sessionId, playerName, content, timestamp, tags ?? []);
     }
 }

@@ -9,7 +9,7 @@ namespace DodCompanion.Domain.Session;
 /// </summary>
 public sealed class SessionAggregate : IAggregateRoot
 {
-    private readonly HashSet<string> _players = new(StringComparer.OrdinalIgnoreCase);
+    private readonly List<PlayerInfo> _players = [];
 
     // Set-once identity/creation data.
     public string Id { get; private set; } = string.Empty;
@@ -22,7 +22,7 @@ public sealed class SessionAggregate : IAggregateRoot
 
     public DateTimeOffset CreatedAt { get; private set; }
 
-    public IReadOnlyCollection<string> Players => _players;
+    public IReadOnlyList<PlayerInfo> Players => _players.AsReadOnly();
 
     // Parameterless ctor for the RavenDB serializer.
     private SessionAggregate()
@@ -42,9 +42,17 @@ public sealed class SessionAggregate : IAggregateRoot
         return new SessionAggregate(roomCode, joinToken, createdAt);
     }
 
-    /// <summary>Add a player to the session. Idempotent — joining twice is a no-op.</summary>
-    public void Join(string playerName)
+    /// <summary>
+    /// Add or update a player in the session. Idempotent — rejoining with the same name updates the player's stats.
+    /// </summary>
+    public void Join(PlayerInfo player)
     {
-        _players.Add(playerName);
+        var existing = _players.FindIndex(p =>
+            string.Equals(p.Name, player.Name, StringComparison.OrdinalIgnoreCase));
+
+        if (existing >= 0)
+            _players[existing] = player;
+        else
+            _players.Add(player);
     }
 }

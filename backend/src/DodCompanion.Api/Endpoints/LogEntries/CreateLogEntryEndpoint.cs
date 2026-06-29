@@ -8,7 +8,7 @@ using MediatR;
 namespace DodCompanion.Api.Endpoints.LogEntries;
 
 /// <summary>HTTP request body for creating a log entry.</summary>
-public sealed record CreateLogEntryRequest(string Content);
+public sealed record CreateLogEntryRequest(string Content, List<string>? Tags);
 
 /// <summary>POST /log-entries — adds a timeline entry for the current session and broadcasts it.</summary>
 public sealed class CreateLogEntryEndpoint(ISender sender)
@@ -20,14 +20,14 @@ public sealed class CreateLogEntryEndpoint(ISender sender)
         Summary(s =>
         {
             s.Summary = "Log a timeline event for the current session.";
-            s.ExampleRequest = new CreateLogEntryRequest("The party found a chest with 200 gold.");
+            s.ExampleRequest = new CreateLogEntryRequest("The party found a chest with 200 gold.", ["Loot"]);
         });
         Tags("LogEntries");
     }
 
     public override async Task HandleAsync(CreateLogEntryRequest req, CancellationToken ct)
     {
-        var result = await sender.Send(new CreateLogEntryCommand(req.Content), ct);
+        var result = await sender.Send(new CreateLogEntryCommand(req.Content, req.Tags ?? []), ct);
         await Send.ResponseAsync(result.ToApiResponse(), result.ToHttpStatusCode(), ct);
     }
 }

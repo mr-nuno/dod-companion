@@ -6,6 +6,7 @@ namespace DodCompanion.Application.Common.Dtos;
 /// </summary>
 public sealed record RuleSearchResult(
     string Query,
+    string? ProcessedQuery,
     int TotalHits,
     IReadOnlyList<RuleSearchHit> Results);
 

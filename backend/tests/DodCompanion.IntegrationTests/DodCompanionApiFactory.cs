@@ -76,6 +76,7 @@ public sealed class DodCompanionApiFactory : WebApplicationFactory<Program>
         public Task<Result<RuleSearchResult>> SearchAsync(string query, CancellationToken ct) =>
             Task.FromResult(Result.Success(new RuleSearchResult(
                 query,
+                null,
                 1,
                 [new RuleSearchHit("rulebook.pdf", 42, "Combat Rules", "**Roll initiative**", ["combat"], 0.95)])));
     }

@@ -25,10 +25,22 @@ export interface LogEntry {
   playerName: string;
   content: string;
   timestamp: string;
+  tags: string[];
 }
 
 export interface TimelineResponse {
   entries: LogEntry[];
+}
+
+export interface PlayerInfo {
+  name: string;
+  kp: number;
+  upptackFara: number;
+  finnaDoldaTing: number;
+}
+
+export interface PlayersResponse {
+  players: PlayerInfo[];
 }
 
 export interface RuleSearchHit {
@@ -42,6 +54,16 @@ export interface RuleSearchHit {
 
 export interface RuleSearchResult {
   query: string;
+  processedQuery?: string;
   totalHits: number;
   results: RuleSearchHit[];
+}
+
+export interface SessionSummary {
+  id: string;
+  sessionId: string;
+  roomCode: string;
+  content: string;
+  entryCount: number;
+  generatedAt: string;
 }

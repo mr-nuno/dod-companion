@@ -13,9 +13,14 @@ namespace DodCompanion.Application.Features.Sessions.JoinSession;
 /// Joins a player to an existing session identified by its unguessable join token (carried in the QR code).
 /// Unknown tokens are rejected — there is no auto-create. Cookie sign-in happens in the endpoint.
 /// </summary>
-public sealed record JoinSessionCommand(string JoinToken, string PlayerName) : IRequest<Result<SessionResult>>
+public sealed record JoinSessionCommand(
+    string JoinToken,
+    string PlayerName,
+    int Kp,
+    int UpptackFara,
+    int FinnaDoldaTing) : IRequest<Result<SessionResult>>
 {
-    public sealed class Handler(IApplicationDbContext db)
+    public sealed class Handler(IApplicationDbContext db, ITimelineNotifier notifier)
         : IRequestHandler<JoinSessionCommand, Result<SessionResult>>
     {
         public async Task<Result<SessionResult>> Handle(JoinSessionCommand request, CancellationToken ct)
@@ -34,8 +39,11 @@ public sealed record JoinSessionCommand(string JoinToken, string PlayerName) : I
                 return Result.NotFound("Invalid or expired join link.");
             }
 
-            session.Join(playerName);
+            var player = new PlayerInfo(playerName, request.Kp, request.UpptackFara, request.FinnaDoldaTing);
+            session.Join(player);
             await db.SaveChangesAsync(ct);
+
+            await notifier.PlayerJoinedAsync(session.Id, player, ct);
 
             return Result.Success(new SessionResult(session.Id, session.RoomCode, playerName, session.JoinToken));
         }
@@ -51,6 +59,15 @@ public sealed record JoinSessionCommand(string JoinToken, string PlayerName) : I
             RuleFor(x => x.PlayerName)
                 .NotEmpty().WithMessage("Player name is required.")
                 .MaximumLength(64).WithMessage("Player name must be 64 characters or fewer.");
+
+            RuleFor(x => x.Kp)
+                .GreaterThan(0).WithMessage("KP must be a positive number.");
+
+            RuleFor(x => x.UpptackFara)
+                .GreaterThan(0).WithMessage("Upptäck fara must be a positive number.");
+
+            RuleFor(x => x.FinnaDoldaTing)
+                .GreaterThan(0).WithMessage("Finna dolda ting must be a positive number.");
         }
     }
 }

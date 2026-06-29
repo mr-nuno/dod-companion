@@ -33,8 +33,8 @@ export const timelineStore = {
   },
 
   /** Post a new entry; it arrives back (and to everyone) via the SignalR broadcast. */
-  async post(content: string): Promise<void> {
-    await apiClient.createLogEntry(content);
+  async post(content: string, tags: string[]): Promise<void> {
+    await apiClient.createLogEntry(content, tags);
   },
 
   async reset(): Promise<void> {

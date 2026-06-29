@@ -14,7 +14,7 @@ public class SearchRulesHandlerTests
     [Fact]
     public async Task Handle_Should_TrimQueryAndPassThroughResult()
     {
-        var expected = new RuleSearchResult("combat", 1, []);
+        var expected = new RuleSearchResult("combat", null, 1, []);
         _searchClient.SearchAsync("combat", Arg.Any<CancellationToken>()).Returns(Result.Success(expected));
 
         var handler = new SearchRulesQuery.Handler(_searchClient);

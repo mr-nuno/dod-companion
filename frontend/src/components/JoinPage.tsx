@@ -26,6 +26,9 @@ export const JoinPage = () => {
   const [createdRoom, setCreatedRoom] = useState<CreatedRoom | null>(null);
 
   const [playerName, setPlayerName] = useState('');
+  const [kp, setKp] = useState<number>(10);
+  const [upptackFara, setUpptackFara] = useState<number>(10);
+  const [finnaDoldaTing, setFinnaDoldaTing] = useState<number>(10);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -52,7 +55,7 @@ export const JoinPage = () => {
     setError(null);
     setSubmitting(true);
     try {
-      await join(enterToken, playerName);
+      await join(enterToken, playerName, kp, upptackFara, finnaDoldaTing);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not join.');
     } finally {
@@ -134,18 +137,56 @@ export const JoinPage = () => {
           </div>
         )}
 
-        {/* Player name — required to actually enter (join-from-QR and create step 2) */}
+        {/* Player name + stats — required to actually enter (join-from-QR and create step 2) */}
         {(isJoining || showQrStep) && (
-          <label className="block space-y-2">
-            <span className={labelClass}>Player name</span>
-            <input
-              value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
-              placeholder="Aragorn"
-              className={inputClass}
-              required
-            />
-          </label>
+          <>
+            <label className="block space-y-2">
+              <span className={labelClass}>Player name</span>
+              <input
+                value={playerName}
+                onChange={(e) => setPlayerName(e.target.value)}
+                placeholder="Aragorn"
+                className={inputClass}
+                required
+              />
+            </label>
+
+            <div className="grid grid-cols-3 gap-3">
+              <label className="block space-y-2">
+                <span className={labelClass}>KP</span>
+                <input
+                  type="number"
+                  min="1"
+                  value={kp}
+                  onChange={(e) => setKp(Math.max(1, Number(e.target.value)))}
+                  className={inputClass}
+                  required
+                />
+              </label>
+              <label className="block space-y-2">
+                <span className={labelClass}>Uppt. fara</span>
+                <input
+                  type="number"
+                  min="1"
+                  value={upptackFara}
+                  onChange={(e) => setUpptackFara(Math.max(1, Number(e.target.value)))}
+                  className={inputClass}
+                  required
+                />
+              </label>
+              <label className="block space-y-2">
+                <span className={labelClass}>Finna dolda</span>
+                <input
+                  type="number"
+                  min="1"
+                  value={finnaDoldaTing}
+                  onChange={(e) => setFinnaDoldaTing(Math.max(1, Number(e.target.value)))}
+                  className={inputClass}
+                  required
+                />
+              </label>
+            </div>
+          </>
         )}
 
         {error && (
