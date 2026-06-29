@@ -4,8 +4,8 @@ using FastEndpoints;
 
 namespace DodCompanion.Api.Endpoints.Sessions;
 
-/// <summary>The current player's session context.</summary>
-public sealed record MeResponse(string SessionId, string PlayerName);
+/// <summary>The current player's session context, including the room's join token for the shareable QR.</summary>
+public sealed record MeResponse(string SessionId, string PlayerName, string RoomCode, string JoinToken);
 
 /// <summary>GET /sessions/me — returns the signed-in player's session, used by the SPA to gate routes.</summary>
 public sealed class MeEndpoint(IUserSession userSession) : EndpointWithoutRequest<ApiResponse<MeResponse>>
@@ -25,7 +25,11 @@ public sealed class MeEndpoint(IUserSession userSession) : EndpointWithoutReques
             return;
         }
 
-        var response = ApiResponse<MeResponse>.Ok(new MeResponse(userSession.SessionId, userSession.PlayerName));
+        var response = ApiResponse<MeResponse>.Ok(new MeResponse(
+            userSession.SessionId,
+            userSession.PlayerName,
+            userSession.RoomCode ?? string.Empty,
+            userSession.JoinToken ?? string.Empty));
         await Send.ResponseAsync(response, StatusCodes.Status200OK, ct);
     }
 }

@@ -5,8 +5,11 @@ holds all secrets and state; the React frontend never sees API keys or bearer to
 
 ## Features
 
-1. **Menti-style auth** — join a session with a room code + player name. The BFF issues an HttpOnly
-   cookie; unknown room codes auto-create the session.
+1. **Host-gated rooms** — a host provisions a room with a room name + the shared **host key**
+   (`Sessions:CreateKey`); this generates an unguessable join token and shows a QR code. The host then
+   enters a player name to join, exactly like everyone else — players join only by scanning the QR /
+   invite link (`/?join=<token>`), never by guessing a room name. The BFF issues an HttpOnly cookie on
+   join.
 2. **Shared timeline** — players post log entries persisted to RavenDB; everyone sees a live feed
    pushed over **SignalR** (with an initial REST load).
 3. **Rule search proxy** — the BFF forwards rule questions to an external PDF Search API, attaching a
@@ -62,6 +65,9 @@ docker run -d -p 8080:8080 \
 cd backend/src/DodCompanion.Api
 dotnet user-secrets init
 dotnet user-secrets set "RulesApi:Auth:ClientSecret" "<your-client-secret>"
+#    The host key gates room creation. Development defaults to "dev-host-key"
+#    (appsettings.Development.json); override it via user-secrets / env if you like.
+dotnet user-secrets set "Sessions:CreateKey" "<your-host-key>"
 
 # 3. Backend (http://localhost:5116)
 dotnet run
@@ -89,6 +95,7 @@ skipped if it is unreachable.
 | `RulesApi:Auth:TokenEndpoint` / `ClientId` / `GrantType` | appsettings | OAuth2 client-credentials config |
 | `RulesApi:Auth:ClientSecret` | **user-secrets / env** (`RULES_API_CLIENT_SECRET`) | OAuth client secret — never committed |
 | `Cors:AllowedOrigins` | appsettings / env | allowed SPA origins |
+| `Sessions:CreateKey` | **user-secrets / env** (`Sessions__CreateKey`) | shared host key required to create rooms; if empty, room creation is disabled (fails closed) |
 
 The BFF acquires the Rules API bearer token from `RulesApi:Auth:TokenEndpoint` using
 `client_credentials`, caches it until shortly before expiry, and attaches it to every search request

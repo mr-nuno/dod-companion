@@ -2,6 +2,7 @@ using System.Security.Cryptography.X509Certificates;
 using DodCompanion.Application.Common.Interfaces;
 using DodCompanion.Infrastructure.Persistence;
 using DodCompanion.Infrastructure.Search;
+using DodCompanion.Infrastructure.Security;
 using DodCompanion.Infrastructure.Time;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
@@ -24,6 +25,7 @@ public static class DependencyInjection
         AddRulesSearch(services, configuration);
 
         services.AddSingleton<IDateTimeProvider, SystemDateTimeProvider>();
+        services.AddSingleton<ITokenGenerator, CryptoTokenGenerator>();
 
         return services;
     }

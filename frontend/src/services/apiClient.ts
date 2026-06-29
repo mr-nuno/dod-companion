@@ -1,6 +1,7 @@
 import { apiBaseUrl } from '@services/config';
 import type {
   ApiResponse,
+  CreatedRoom,
   LogEntry,
   RuleSearchResult,
   Session,
@@ -41,8 +42,11 @@ const jsonBody = (payload: unknown): RequestInit => ({
 });
 
 export const apiClient = {
-  joinSession: (roomCode: string, playerName: string) =>
-    request<Session>('/sessions/join', jsonBody({ roomCode, playerName })),
+  createSession: (roomName: string, hostKey: string) =>
+    request<CreatedRoom>('/sessions/create', jsonBody({ roomName, hostKey })),
+
+  joinSession: (joinToken: string, playerName: string) =>
+    request<Session>('/sessions/join', jsonBody({ joinToken, playerName })),
 
   getMe: () => request<Session>('/sessions/me'),
 

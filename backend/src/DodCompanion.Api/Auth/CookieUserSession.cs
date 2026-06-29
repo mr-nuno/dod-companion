@@ -11,5 +11,9 @@ public sealed class CookieUserSession(IHttpContextAccessor httpContextAccessor) 
 
     public string? PlayerName => _user?.FindFirst(SessionClaimTypes.PlayerName)?.Value;
 
+    public string? RoomCode => _user?.FindFirst(SessionClaimTypes.RoomCode)?.Value;
+
+    public string? JoinToken => _user?.FindFirst(SessionClaimTypes.JoinToken)?.Value;
+
     public bool IsAuthenticated => _user?.Identity?.IsAuthenticated ?? false;
 }

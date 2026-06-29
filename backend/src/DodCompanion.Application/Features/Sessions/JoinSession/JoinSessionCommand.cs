@@ -1,5 +1,6 @@
 using Ardalis.Result;
 using DodCompanion.Application.Common.Interfaces;
+using DodCompanion.Application.Features.Sessions;
 using DodCompanion.Domain.Session;
 using FluentValidation;
 using MediatR;
@@ -9,44 +10,43 @@ using Raven.Client.Documents.Linq;
 namespace DodCompanion.Application.Features.Sessions.JoinSession;
 
 /// <summary>
-/// Joins a player to a session identified by room code. The session is auto-created on first join
-/// of an unknown code; later joins of the same code attach to it. Cookie sign-in happens in the endpoint.
+/// Joins a player to an existing session identified by its unguessable join token (carried in the QR code).
+/// Unknown tokens are rejected — there is no auto-create. Cookie sign-in happens in the endpoint.
 /// </summary>
-public sealed record JoinSessionCommand(string RoomCode, string PlayerName) : IRequest<Result<JoinSessionResponse>>
+public sealed record JoinSessionCommand(string JoinToken, string PlayerName) : IRequest<Result<SessionResult>>
 {
-    public sealed class Handler(IApplicationDbContext db, IDateTimeProvider clock)
-        : IRequestHandler<JoinSessionCommand, Result<JoinSessionResponse>>
+    public sealed class Handler(IApplicationDbContext db)
+        : IRequestHandler<JoinSessionCommand, Result<SessionResult>>
     {
-        public async Task<Result<JoinSessionResponse>> Handle(JoinSessionCommand request, CancellationToken ct)
+        public async Task<Result<SessionResult>> Handle(JoinSessionCommand request, CancellationToken ct)
         {
-            var roomCode = Normalize(request.RoomCode);
+            var joinToken = request.JoinToken.Trim();
             var playerName = request.PlayerName.Trim();
 
+            // Wait for the index to catch up: a room created moments earlier (in a separate request)
+            // must be immediately joinable — including by the host who just created it.
             var session = await db.Query<SessionAggregate>()
-                .FirstOrDefaultAsync(s => s.RoomCode == roomCode, ct);
+                .Customize(x => x.WaitForNonStaleResults())
+                .FirstOrDefaultAsync(s => s.JoinToken == joinToken, ct);
 
             if (session is null)
             {
-                session = SessionAggregate.Create(roomCode, clock.UtcNow);
-                await db.StoreAsync(session, ct);
+                return Result.NotFound("Invalid or expired join link.");
             }
 
             session.Join(playerName);
             await db.SaveChangesAsync(ct);
 
-            return Result.Success(new JoinSessionResponse(session.Id, session.RoomCode, playerName));
+            return Result.Success(new SessionResult(session.Id, session.RoomCode, playerName, session.JoinToken));
         }
-
-        private static string Normalize(string roomCode) => roomCode.Trim().ToUpperInvariant();
     }
 
     public sealed class Validator : AbstractValidator<JoinSessionCommand>
     {
         public Validator()
         {
-            RuleFor(x => x.RoomCode)
-                .NotEmpty().WithMessage("Room code is required.")
-                .MaximumLength(32).WithMessage("Room code must be 32 characters or fewer.");
+            RuleFor(x => x.JoinToken)
+                .NotEmpty().WithMessage("A join link is required.");
 
             RuleFor(x => x.PlayerName)
                 .NotEmpty().WithMessage("Player name is required.")
@@ -54,6 +54,3 @@ public sealed record JoinSessionCommand(string RoomCode, string PlayerName) : IR
         }
     }
 }
-
-/// <summary>Identifies the joined session and the player, used to issue the auth cookie.</summary>
-public sealed record JoinSessionResponse(string SessionId, string RoomCode, string PlayerName);
