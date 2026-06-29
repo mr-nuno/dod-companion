@@ -3,7 +3,6 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useSession } from '@hooks/useSession';
 import { useTimeline } from '@hooks/useTimeline';
 import { useRoster } from '@hooks/useRoster';
-import { usePlayerJoinNotification } from '@hooks/usePlayerJoinNotification';
 import { TimelineView } from '@components/TimelineView';
 import { LogEntryForm } from '@components/LogEntryForm';
 import { RuleSearchPanel } from '@components/RuleSearchPanel';
@@ -20,7 +19,6 @@ export const SessionPage = ({ session }: SessionPageProps) => {
   const { logout } = useSession();
   const { entries, load, reset } = useTimeline();
   const { load: loadRoster, reset: resetRoster } = useRoster();
-  const joinNotification = usePlayerJoinNotification();
 
   useEffect(() => {
     void load();
@@ -71,12 +69,7 @@ export const SessionPage = ({ session }: SessionPageProps) => {
           </div>
         </div>
 
-        {joinNotification && (
-          <div className="flex items-center gap-2 rounded-xl bg-dragongreen-500/10 px-4 py-2 text-sm font-semibold text-dragongreen-700 dark:text-dragongreen-400 transition-opacity">
-            <span className="h-2 w-2 rounded-full bg-dragongreen-500"></span>
-            {joinNotification}
-          </div>
-        )}
+
 
         <div className="flex items-center justify-center gap-3 w-full md:hidden">
           <ThemeToggle />
