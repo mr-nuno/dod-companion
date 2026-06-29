@@ -1,0 +1,50 @@
+@import 'tailwindcss';
+
+@variant dark (&:where(.dark, .dark *));
+
+/* Dragonbane brand palette (from resources/tailwind.config.js). */
+@theme {
+  --color-dodred-50: #ffeded;
+  --color-dodred-100: #ffc4c6;
+  --color-dodred-200: #ff9c9e;
+  --color-dodred-300: #ff7476;
+  --color-dodred-400: #ff4d4e;
+  --color-dodred-500: #e31c23;
+  --color-dodred-600: #d4141a;
+  --color-dodred-700: #b30f13;
+  --color-dodred-800: #910c10;
+  --color-dodred-900: #71090c;
+
+  --color-dragongreen-400: #3fd083;
+  --color-dragongreen-500: #18b868;
+  --color-dragongreen-600: #129a56;
+
+  --color-runecyan-400: #5cf5d8;
+  --color-runecyan-500: #34f2cf;
+  --color-runecyan-600: #1fcfae;
+
+  --color-charcoal-400: #8a8a8a;
+  --color-charcoal-500: #5c5c5c;
+  --color-charcoal-600: #3a3a3a;
+  --color-charcoal-700: #2a2a2a;
+  --color-charcoal-800: #1c1c1c;
+  --color-charcoal-900: #121212;
+  --color-charcoal-950: #0a0a0a;
+
+  --color-bonewhite-50: #f7f9fc;
+  --color-bonewhite-100: #eef2f8;
+  --color-bonewhite-200: #dce3ee;
+  --color-bonewhite-300: #b8c2d0;
+  --color-bonewhite-400: #cdd6e2;
+  --color-bonewhite-500: #e2e8f0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-bonewhite-100 text-charcoal-900 antialiased transition-colors dark:bg-charcoal-950 dark:text-bonewhite-500;
+}

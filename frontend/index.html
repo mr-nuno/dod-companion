@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/dod.png" />
+    <title>DoD Companion</title>
+    <!-- Apply the saved theme before first paint to avoid a flash. Brand default is dark. -->
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem('dod-theme') === 'light') {
+            return;
+          }
+        } catch (e) {
+          /* localStorage unavailable — fall through to dark default */
+        }
+        document.documentElement.classList.add('dark');
+      })();
+    </script>
+    <!-- Runtime config injected by the nginx entrypoint in Docker; absent in dev. -->
+    <script src="/config.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

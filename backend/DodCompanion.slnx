@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DodCompanion.Api/DodCompanion.Api.csproj" />
+    <Project Path="src/DodCompanion.Application/DodCompanion.Application.csproj" />
+    <Project Path="src/DodCompanion.Domain/DodCompanion.Domain.csproj" />
+    <Project Path="src/DodCompanion.Infrastructure/DodCompanion.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DodCompanion.IntegrationTests/DodCompanion.IntegrationTests.csproj" />
+    <Project Path="tests/DodCompanion.UnitTests/DodCompanion.UnitTests.csproj" />
+  </Folder>
+</Solution>

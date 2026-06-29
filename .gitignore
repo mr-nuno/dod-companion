@@ -1,0 +1,36 @@
+# .NET
+bin/
+obj/
+*.user
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+.vs/
+
+# User secrets are stored outside the repo by dotnet user-secrets; never commit secrets
+appsettings.*.local.json
+
+# Env files holding secrets (loaded by docker-compose env_file). Keep the .example template.
+.env
+backend/.env
+!.env.example
+!*.env.example
+
+# Node / frontend
+node_modules/
+dist/
+.vite/
+*.local
+
+# RavenDB embedded/test data
+RavenDB/
+*.ravendb
+
+# Editor
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Logs
+*.log
