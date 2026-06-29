@@ -1,6 +1,6 @@
 import { BehaviorSubject } from 'rxjs';
 import { apiClient } from '@services/apiClient';
-import type { Session } from '@/types';
+import type { CreatedRoom, Session } from '@/types';
 
 const session$ = new BehaviorSubject<Session | null>(null);
 
@@ -11,8 +11,14 @@ export const sessionStore = {
     return session$.value;
   },
 
-  async join(roomCode: string, playerName: string): Promise<Session> {
-    const session = await apiClient.joinSession(roomCode, playerName);
+  // Provisions the room only — no player joins yet, so the session state is untouched. The caller
+  // shows the QR, then calls join() with a player name to actually enter (and authenticate).
+  create(roomName: string, hostKey: string): Promise<CreatedRoom> {
+    return apiClient.createSession(roomName, hostKey);
+  },
+
+  async join(joinToken: string, playerName: string): Promise<Session> {
+    const session = await apiClient.joinSession(joinToken, playerName);
     session$.next(session);
     return session;
   },

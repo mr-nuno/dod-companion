@@ -46,12 +46,12 @@ export const SessionPage = ({ session }: SessionPageProps) => {
             </span>
           </div>
           <div className="hidden border-l border-bonewhite-300 pl-8 dark:border-charcoal-700 md:block">
-            <div 
+            <div
               className="cursor-help overflow-hidden rounded-xl bg-white p-2 shadow-sm transition-transform hover:scale-105"
-              title={`Room Name: ${session.sessionId}`}
+              title={`Room: ${session.roomCode} — scan to join`}
             >
               <QRCodeSVG
-                value={`${window.location.origin}/?room=${session.sessionId}`}
+                value={`${window.location.origin}/?join=${session.joinToken}`}
                 size={80}
                 bgColor="#ffffff"
                 fgColor="#1c1c1c"

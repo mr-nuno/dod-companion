@@ -21,11 +21,15 @@ public sealed class DodCompanionApiFactory : WebApplicationFactory<Program>
 
     public string DatabaseName { get; } = $"DodCompanion_Test_{Guid.NewGuid():N}";
 
+    /// <summary>The host key the test factory configures so tests can create rooms.</summary>
+    public const string HostKey = "test-host-key";
+
     protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
     {
         builder.UseSetting("Raven:Urls:0", RavenUrl);
         builder.UseSetting("Raven:DatabaseName", DatabaseName);
         builder.UseSetting("Cors:AllowedOrigins:0", "http://localhost");
+        builder.UseSetting("Sessions:CreateKey", HostKey);
 
         builder.ConfigureTestServices(services =>
         {

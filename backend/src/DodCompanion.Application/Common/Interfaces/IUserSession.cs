@@ -8,5 +8,7 @@ public interface IUserSession
 {
     string? SessionId { get; }
     string? PlayerName { get; }
+    string? RoomCode { get; }
+    string? JoinToken { get; }
     bool IsAuthenticated { get; }
 }

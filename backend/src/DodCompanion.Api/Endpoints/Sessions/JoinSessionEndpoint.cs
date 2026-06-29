@@ -1,21 +1,19 @@
-using System.Security.Claims;
 using DodCompanion.Api.Auth;
 using DodCompanion.Application.Common.Models;
+using DodCompanion.Application.Features.Sessions;
 using DodCompanion.Application.Features.Sessions.JoinSession;
 using FastEndpoints;
 using FluentValidation;
 using MediatR;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace DodCompanion.Api.Endpoints.Sessions;
 
-/// <summary>HTTP request body for joining a session.</summary>
-public sealed record JoinSessionRequest(string RoomCode, string PlayerName);
+/// <summary>HTTP request body for joining a session via its join token (from the QR code).</summary>
+public sealed record JoinSessionRequest(string JoinToken, string PlayerName);
 
-/// <summary>POST /sessions/join — auto-creates or joins a session and issues the auth cookie.</summary>
+/// <summary>POST /sessions/join — joins an existing session by its join token and issues the auth cookie.</summary>
 public sealed class JoinSessionEndpoint(ISender sender)
-    : Endpoint<JoinSessionRequest, ApiResponse<JoinSessionResponse>>
+    : Endpoint<JoinSessionRequest, ApiResponse<SessionResult>>
 {
     public override void Configure()
     {
@@ -23,39 +21,25 @@ public sealed class JoinSessionEndpoint(ISender sender)
         AllowAnonymous();
         Summary(s =>
         {
-            s.Summary = "Join (or create) a session by room code.";
-            s.Description = "Menti-style entry: a room code plus a player name. Unknown codes create a new session. "
-                + "On success an HttpOnly authentication cookie is issued.";
-            s.ExampleRequest = new JoinSessionRequest("DRAGON", "Aragorn");
+            s.Summary = "Join a session via its join token.";
+            s.Description = "The join token comes from the room's QR code / invite link. Unknown tokens are "
+                + "rejected — there is no way to join by guessing a room name. On success an HttpOnly "
+                + "authentication cookie is issued.";
+            s.ExampleRequest = new JoinSessionRequest("k3J9-xQ2...", "Aragorn");
         });
         Tags("Sessions");
     }
 
     public override async Task HandleAsync(JoinSessionRequest req, CancellationToken ct)
     {
-        var result = await sender.Send(new JoinSessionCommand(req.RoomCode, req.PlayerName), ct);
+        var result = await sender.Send(new JoinSessionCommand(req.JoinToken, req.PlayerName), ct);
 
         if (result.IsSuccess)
         {
-            await SignInAsync(result.Value, ct);
+            await HttpContext.IssueSessionCookieAsync(result.Value);
         }
 
         await Send.ResponseAsync(result.ToApiResponse(), result.ToHttpStatusCode(), ct);
-    }
-
-    private async Task SignInAsync(JoinSessionResponse session, CancellationToken ct)
-    {
-        var claims = new List<Claim>
-        {
-            new(SessionClaimTypes.SessionId, session.SessionId),
-            new(SessionClaimTypes.PlayerName, session.PlayerName),
-            new(ClaimTypes.Name, session.PlayerName),
-        };
-
-        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        var principal = new ClaimsPrincipal(identity);
-
-        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
     }
 }
 
@@ -64,7 +48,7 @@ public sealed class JoinSessionRequestValidator : Validator<JoinSessionRequest>
 {
     public JoinSessionRequestValidator()
     {
-        RuleFor(x => x.RoomCode).NotEmpty().WithMessage("Room code is required.");
+        RuleFor(x => x.JoinToken).NotEmpty().WithMessage("A join link is required.");
         RuleFor(x => x.PlayerName).NotEmpty().WithMessage("Player name is required.");
     }
 }

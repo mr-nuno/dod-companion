@@ -8,6 +8,15 @@ export interface ApiResponse<T> {
 export interface Session {
   sessionId: string;
   playerName: string;
+  roomCode: string;
+  joinToken: string;
+}
+
+// A freshly provisioned room, before any player has joined it.
+export interface CreatedRoom {
+  sessionId: string;
+  roomCode: string;
+  joinToken: string;
 }
 
 export interface LogEntry {

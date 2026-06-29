@@ -6,6 +6,7 @@ export const useSession = () => {
 
   return {
     session,
+    create: sessionStore.create,
     join: sessionStore.join,
     logout: sessionStore.logout,
     loadMe: sessionStore.loadMe,
