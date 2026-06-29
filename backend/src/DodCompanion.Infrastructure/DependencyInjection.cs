@@ -1,3 +1,4 @@
+using System.Security.Cryptography.X509Certificates;
 using DodCompanion.Application.Common.Interfaces;
 using DodCompanion.Infrastructure.Persistence;
 using DodCompanion.Infrastructure.Search;
@@ -34,7 +35,12 @@ public static class DependencyInjection
         services.AddSingleton<IDocumentStore>(sp =>
         {
             var settings = sp.GetRequiredService<IOptions<RavenSettings>>().Value;
-            var store = new DocumentStore { Urls = settings.Urls, Database = settings.DatabaseName };
+            var store = new DocumentStore
+            {
+                Urls = settings.Urls,
+                Database = settings.DatabaseName,
+                Certificate = LoadCertificate(settings),
+            };
             RavenConventions.ApplyConventions(store);
             return store.Initialize();
         });
@@ -43,6 +49,31 @@ public static class DependencyInjection
         services.AddScoped(sp => sp.GetRequiredService<IDocumentStore>().OpenAsyncSession());
         services.AddScoped<IApplicationDbContext, RavenDbContext>();
         services.AddHostedService<RavenDatabaseInitializer>();
+    }
+
+    // A secured RavenDB cluster (e.g. RavenDB Cloud over https) authenticates the client with an
+    // X.509 client certificate; an unsecured local store needs none. Returning null leaves the store
+    // unauthenticated.
+    //
+    // Resolution order:
+    //   1. RAVENDB_CERT_BASE64 env var — base64-encoded PFX, used in production (no file on disk).
+    //   2. Raven:CertificatePath config — file path fallback for local overrides.
+    private static X509Certificate2? LoadCertificate(RavenSettings settings)
+    {
+        var base64 = Environment.GetEnvironmentVariable("RAVENDB_CERT_BASE64");
+        if (!string.IsNullOrWhiteSpace(base64))
+            return X509CertificateLoader.LoadPkcs12(Convert.FromBase64String(base64), password: null);
+
+        if (string.IsNullOrWhiteSpace(settings.CertificatePath))
+            return null;
+
+        if (!File.Exists(settings.CertificatePath))
+            throw new FileNotFoundException(
+                $"RavenDB client certificate not found at '{settings.CertificatePath}'.", settings.CertificatePath);
+
+        return X509CertificateLoader.LoadPkcs12FromFile(
+            settings.CertificatePath,
+            string.IsNullOrEmpty(settings.CertificatePassword) ? null : settings.CertificatePassword);
     }
 
     private static void AddRulesSearch(IServiceCollection services, IConfiguration configuration)
