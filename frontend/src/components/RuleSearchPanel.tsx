@@ -43,7 +43,7 @@ export const RuleSearchPanel = () => {
               key={`${hit.sourceFileName}-${hit.physicalPageNumber}-${index}`}
               className="rounded-lg border border-bonewhite-200 bg-white p-4 dark:border-charcoal-700 dark:bg-charcoal-900/60"
             >
-              <header className="mb-2 flex items-baseline justify-between gap-2">
+              <header className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-2">
                 <h3 className="font-semibold text-runecyan-600 dark:text-runecyan-400">
                   {hit.header ?? 'Result'}
                 </h3>
