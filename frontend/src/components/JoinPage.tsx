@@ -4,11 +4,6 @@ import { useSession } from '@hooks/useSession';
 import { ThemeToggle } from '@components/ThemeToggle';
 import type { CreatedRoom } from '@/types';
 
-// The join token comes from the room's QR code / invite link (e.g. /?join=<token>).
-// Without it there is no way to join — you can only create a new room.
-const joinToken = new URLSearchParams(window.location.search).get('join') ?? '';
-const isJoining = joinToken.length > 0;
-
 const inputClass =
   'w-full rounded-xl border-2 border-bonewhite-200 bg-bonewhite-50/50 px-4 py-3 text-lg text-charcoal-900 outline-none transition-colors focus:border-dodred-500 dark:border-charcoal-700 dark:bg-charcoal-950/50 dark:text-bonewhite-500 dark:focus:border-dodred-500';
 const labelClass =
@@ -18,6 +13,11 @@ const primaryButtonClass =
 
 export const JoinPage = () => {
   const { create, join } = useSession();
+
+  // Read the join token from the URL here (not at module level) so the value is always
+  // in sync with the current URL, even if it changed since the module was first imported.
+  const joinToken = new URLSearchParams(window.location.search).get('join') ?? '';
+  const isJoining = joinToken.length > 0;
 
   // Create step 1 inputs.
   const [roomName, setRoomName] = useState('');
@@ -54,13 +54,13 @@ export const JoinPage = () => {
     try {
       await join(enterToken, playerName);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not enter the table.');
+      setError(err instanceof Error ? err.message : 'Could not join.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const heading = isJoining ? 'Join the table' : showQrStep ? 'Share & enter' : 'Create a room';
+  const heading = isJoining ? 'Join' : showQrStep ? 'Share & enter' : 'Create a room';
 
   return (
     <div className="relative flex min-h-full items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-bonewhite-200 via-bonewhite-100 to-bonewhite-50 p-6 dark:from-charcoal-800 dark:via-charcoal-900 dark:to-charcoal-950">
@@ -128,7 +128,7 @@ export const JoinPage = () => {
               />
             </div>
             <p className="text-xs font-medium text-charcoal-500 dark:text-bonewhite-300">
-              Players scan this to join the table
+              Players scan this to join
             </p>
           </div>
         )}
@@ -155,12 +155,12 @@ export const JoinPage = () => {
 
         <button type="submit" disabled={submitting} className={primaryButtonClass}>
           {!isJoining && !showQrStep && (submitting ? 'Creating…' : 'Create room')}
-          {(isJoining || showQrStep) && (submitting ? 'Joining…' : 'Enter the table')}
+          {(isJoining || showQrStep) && (submitting ? 'Joining…' : 'Join')}
         </button>
 
         {!isJoining && !showQrStep && (
           <p className="text-center text-xs font-medium text-charcoal-500 dark:text-bonewhite-300">
-            Joining an existing table? Scan its QR code to get in.
+            Joining a room? Scan its QR code to get in.
           </p>
         )}
       </form>
