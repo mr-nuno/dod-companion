@@ -17,8 +17,8 @@ export const sessionStore = {
     return apiClient.createSession(roomName, hostKey);
   },
 
-  async join(joinToken: string, playerName: string, kp: number, upptackFara: number, finnaDoldaTing: number): Promise<Session> {
-    const session = await apiClient.joinSession(joinToken, playerName, kp, upptackFara, finnaDoldaTing);
+  async join(joinToken: string, playerName: string, kp: number, upptackFara: number, finnaDoldaTing: number, isDm: boolean = false): Promise<Session> {
+    const session = await apiClient.joinSession(joinToken, playerName, kp, upptackFara, finnaDoldaTing, isDm);
     session$.next(session);
     return session;
   },

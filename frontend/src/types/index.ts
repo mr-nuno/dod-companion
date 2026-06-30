@@ -37,6 +37,7 @@ export interface PlayerInfo {
   kp: number;
   upptackFara: number;
   finnaDoldaTing: number;
+  isDm?: boolean;
 }
 
 export interface PlayersResponse {
