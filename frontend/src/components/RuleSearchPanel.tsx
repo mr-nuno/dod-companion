@@ -8,6 +8,10 @@ export const RuleSearchPanel = () => {
   const { search, result, loading, error } = useRuleSearch();
   const [query, setQuery] = useState('');
 
+  // searchScore is an unbounded relevance score, not a 0–1 value, so it can't be
+  // shown as a percentage directly. Normalize against the top hit (best = 100%).
+  const topScore = result?.results.reduce((max, hit) => Math.max(max, hit.searchScore), 0) ?? 0;
+
   const onSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     void search(query);
@@ -94,7 +98,7 @@ export const RuleSearchPanel = () => {
                   <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-charcoal-400 dark:text-charcoal-500">
                     <span>Match</span>
                     <span className="rounded bg-charcoal-100 px-1.5 py-0.5 text-charcoal-600 dark:bg-charcoal-800 dark:text-bonewhite-300">
-                      {Math.round(hit.searchScore * 100)}%
+                      {topScore > 0 ? Math.round((hit.searchScore / topScore) * 100) : 0}%
                     </span>
                   </div>
                 </footer>
