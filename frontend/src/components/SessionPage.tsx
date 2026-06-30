@@ -46,13 +46,13 @@ export const SessionPage = ({ session }: SessionPageProps) => {
 
   return (
     <div className="mx-auto flex min-h-full max-w-6xl flex-col p-4 relative">
-      <header className="mb-6 flex flex-col gap-4 rounded-3xl bg-white/60 p-4 shadow-sm backdrop-blur-md dark:bg-charcoal-900/40 dark:shadow-charcoal-900/50 sm:p-6 md:flex-row md:items-center md:justify-between md:gap-6">
+      <header className="relative mb-6 flex flex-col gap-4 rounded-3xl bg-white/60 p-4 shadow-sm backdrop-blur-md dark:bg-charcoal-900/40 dark:shadow-charcoal-900/50 sm:p-6 md:flex-row md:items-center md:justify-between md:gap-6">
         <div className="flex flex-col gap-4 w-full md:w-auto md:flex-row md:items-center md:gap-8">
-          <div className="flex justify-center w-full md:w-auto md:justify-start">
+          <div className="flex justify-start w-full pr-16 md:w-auto md:justify-start md:pr-0">
             <img
               src="/dod.png"
               alt="Drakar och Demoner"
-              className="w-full h-auto max-w-[280px] drop-shadow-sm transition-transform hover:scale-105 md:h-24 md:w-auto md:max-w-none"
+              className="w-full h-auto max-w-[240px] drop-shadow-sm transition-transform hover:scale-105 md:h-24 md:w-auto md:max-w-none"
             />
           </div>
           <div className="hidden flex-col md:flex">
@@ -97,7 +97,7 @@ export const SessionPage = ({ session }: SessionPageProps) => {
           </div>
         </div>
 
-        <div className="absolute top-6 right-6 md:relative md:top-auto md:right-auto z-30">
+        <div className="absolute top-4 right-4 z-30 sm:top-6 sm:right-6 md:relative md:top-auto md:right-auto">
           <button
             onClick={() => setIsDrawerOpen(true)}
             className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/80 text-charcoal-600 shadow-sm backdrop-blur-md transition-all hover:scale-105 hover:text-dodred-600 dark:bg-charcoal-800/80 dark:text-bonewhite-300 dark:hover:text-dodred-400"
