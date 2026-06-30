@@ -9,8 +9,6 @@ namespace DodCompanion.Domain.Session;
 /// </summary>
 public sealed class SessionAggregate : IAggregateRoot
 {
-    private readonly List<PlayerInfo> _players = [];
-
     // Set-once identity/creation data.
     public string Id { get; private set; } = string.Empty;
 
@@ -22,7 +20,10 @@ public sealed class SessionAggregate : IAggregateRoot
 
     public DateTimeOffset CreatedAt { get; private set; }
 
-    public IReadOnlyList<PlayerInfo> Players => _players.AsReadOnly();
+    // Private-setter auto-property so RavenDB can rehydrate the roster on load. A computed
+    // get-only collection (e.g. _players.AsReadOnly()) serializes out but cannot be deserialized
+    // back, which silently drops every player whenever the session is reloaded from the store.
+    public IReadOnlyList<PlayerInfo> Players { get; private set; } = [];
 
     // Parameterless ctor for the RavenDB serializer.
     private SessionAggregate()
@@ -47,12 +48,15 @@ public sealed class SessionAggregate : IAggregateRoot
     /// </summary>
     public void Join(PlayerInfo player)
     {
-        var existing = _players.FindIndex(p =>
+        var players = Players.ToList();
+        var existing = players.FindIndex(p =>
             string.Equals(p.Name, player.Name, StringComparison.OrdinalIgnoreCase));
 
         if (existing >= 0)
-            _players[existing] = player;
+            players[existing] = player;
         else
-            _players.Add(player);
+            players.Add(player);
+
+        Players = players;
     }
 }

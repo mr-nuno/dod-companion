@@ -101,6 +101,26 @@ public class SessionFlowTests(DodCompanionApiFactory factory) : IClassFixture<Do
     }
 
     [SkippableFact]
+    public async Task GetPlayers_Should_ReturnAllJoinedPlayers_AfterReloadFromStore()
+    {
+        // Reproduces the F5 scenario: the roster must survive a fresh load from RavenDB,
+        // not just live in SignalR-broadcast frontend state.
+        var hostClient = CreateClient();
+        var hostSession = await EnterRoomAsync(hostClient, "roster-room", "Frodo");
+
+        var joinerClient = CreateClient();
+        var joinResponse = await joinerClient.PostAsJsonAsync("/sessions/join",
+            new JoinSessionRequestBody(hostSession.JoinToken, "Sam"));
+        joinResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var players = await hostClient.GetFromJsonAsync<ApiResponse<PlayersBody>>("/sessions/players");
+        players!.Success.ShouldBeTrue();
+        players.Data!.Players.Count.ShouldBe(2);
+        players.Data.Players.ShouldContain(p => p.Name == "Frodo");
+        players.Data.Players.ShouldContain(p => p.Name == "Sam");
+    }
+
+    [SkippableFact]
     public async Task Join_Should_Return404_When_TokenUnknown()
     {
         var client = CreateClient();
@@ -189,4 +209,6 @@ public class SessionFlowTests(DodCompanionApiFactory factory) : IClassFixture<Do
     private sealed record CreateLogEntryBody(string Content, List<string>? Tags = null);
     private sealed record CreatedRoomBody(string SessionId, string RoomCode, string JoinToken);
     private sealed record SessionBody(string SessionId, string RoomCode, string PlayerName, string JoinToken);
+    private sealed record PlayersBody(List<PlayerBody> Players);
+    private sealed record PlayerBody(string Name, int Kp, int UpptackFara, int FinnaDoldaTing);
 }
