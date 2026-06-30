@@ -18,7 +18,8 @@ public sealed record JoinSessionCommand(
     string PlayerName,
     int Kp,
     int UpptackFara,
-    int FinnaDoldaTing) : IRequest<Result<SessionResult>>
+    int FinnaDoldaTing,
+    bool IsDm) : IRequest<Result<SessionResult>>
 {
     public sealed class Handler(IApplicationDbContext db, ITimelineNotifier notifier)
         : IRequestHandler<JoinSessionCommand, Result<SessionResult>>
@@ -39,7 +40,7 @@ public sealed record JoinSessionCommand(
                 return Result.NotFound("Invalid or expired join link.");
             }
 
-            var player = new PlayerInfo(playerName, request.Kp, request.UpptackFara, request.FinnaDoldaTing);
+            var player = new PlayerInfo(playerName, request.Kp, request.UpptackFara, request.FinnaDoldaTing, request.IsDm);
             session.Join(player);
             await db.SaveChangesAsync(ct);
 
@@ -61,13 +62,13 @@ public sealed record JoinSessionCommand(
                 .MaximumLength(64).WithMessage("Player name must be 64 characters or fewer.");
 
             RuleFor(x => x.Kp)
-                .GreaterThan(0).WithMessage("KP must be a positive number.");
+                .GreaterThan(0).When(x => !x.IsDm).WithMessage("KP must be a positive number.");
 
             RuleFor(x => x.UpptackFara)
-                .GreaterThan(0).WithMessage("Upptäck fara must be a positive number.");
+                .GreaterThan(0).When(x => !x.IsDm).WithMessage("Upptäck fara must be a positive number.");
 
             RuleFor(x => x.FinnaDoldaTing)
-                .GreaterThan(0).WithMessage("Finna dolda ting must be a positive number.");
+                .GreaterThan(0).When(x => !x.IsDm).WithMessage("Finna dolda ting must be a positive number.");
         }
     }
 }

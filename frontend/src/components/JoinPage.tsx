@@ -55,7 +55,7 @@ export const JoinPage = () => {
     setError(null);
     setSubmitting(true);
     try {
-      await join(enterToken, playerName, kp, upptackFara, finnaDoldaTing);
+      await join(enterToken, playerName, kp, upptackFara, finnaDoldaTing, showQrStep);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not join.');
     } finally {
@@ -151,41 +151,43 @@ export const JoinPage = () => {
               />
             </label>
 
-            <div className="grid grid-cols-3 gap-3">
-              <label className="block space-y-2">
-                <span className={labelClass}>KP</span>
-                <input
-                  type="number"
-                  min="1"
-                  value={kp}
-                  onChange={(e) => setKp(Math.max(1, Number(e.target.value)))}
-                  className={inputClass}
-                  required
-                />
-              </label>
-              <label className="block space-y-2 cursor-help" title="Upptäcka fara">
-                <span className={labelClass}>UF</span>
-                <input
-                  type="number"
-                  min="1"
-                  value={upptackFara}
-                  onChange={(e) => setUpptackFara(Math.max(1, Number(e.target.value)))}
-                  className={inputClass}
-                  required
-                />
-              </label>
-              <label className="block space-y-2 cursor-help" title="Finna dolda ting">
-                <span className={labelClass}>FDT</span>
-                <input
-                  type="number"
-                  min="1"
-                  value={finnaDoldaTing}
-                  onChange={(e) => setFinnaDoldaTing(Math.max(1, Number(e.target.value)))}
-                  className={inputClass}
-                  required
-                />
-              </label>
-            </div>
+            {!showQrStep && (
+              <div className="grid grid-cols-3 gap-3">
+                <label className="block space-y-2">
+                  <span className={labelClass}>KP</span>
+                  <input
+                    type="number"
+                    min="1"
+                    value={kp}
+                    onChange={(e) => setKp(Math.max(1, Number(e.target.value)))}
+                    className={inputClass}
+                    required
+                  />
+                </label>
+                <label className="block space-y-2 cursor-help" title="Upptäcka fara">
+                  <span className={labelClass}>UF</span>
+                  <input
+                    type="number"
+                    min="1"
+                    value={upptackFara}
+                    onChange={(e) => setUpptackFara(Math.max(1, Number(e.target.value)))}
+                    className={inputClass}
+                    required
+                  />
+                </label>
+                <label className="block space-y-2 cursor-help" title="Finna dolda ting">
+                  <span className={labelClass}>FDT</span>
+                  <input
+                    type="number"
+                    min="1"
+                    value={finnaDoldaTing}
+                    onChange={(e) => setFinnaDoldaTing(Math.max(1, Number(e.target.value)))}
+                    className={inputClass}
+                    required
+                  />
+                </label>
+              </div>
+            )}
           </>
         )}
 

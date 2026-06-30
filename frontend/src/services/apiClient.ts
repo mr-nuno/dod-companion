@@ -47,8 +47,8 @@ export const apiClient = {
   createSession: (roomName: string, hostKey: string) =>
     request<CreatedRoom>('/sessions/create', jsonBody({ roomName, hostKey })),
 
-  joinSession: (joinToken: string, playerName: string, kp: number, upptackFara: number, finnaDoldaTing: number) =>
-    request<Session>('/sessions/join', jsonBody({ joinToken, playerName, kp, upptackFara, finnaDoldaTing })),
+  joinSession: (joinToken: string, playerName: string, kp: number, upptackFara: number, finnaDoldaTing: number, isDm: boolean) =>
+    request<Session>('/sessions/join', jsonBody({ joinToken, playerName, kp, upptackFara, finnaDoldaTing, isDm })),
 
   getMe: () => request<Session>('/sessions/me'),
 

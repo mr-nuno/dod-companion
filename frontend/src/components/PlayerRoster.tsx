@@ -3,7 +3,9 @@ import { useRoster } from '@hooks/useRoster';
 export const PlayerRoster = () => {
   const { players } = useRoster();
 
-  if (players.length === 0) {
+  const visiblePlayers = players.filter((p) => !p.isDm);
+
+  if (visiblePlayers.length === 0) {
     return (
       <p className="py-4 text-center text-sm text-charcoal-400 dark:text-bonewhite-300/60">
         No players yet.
@@ -13,7 +15,7 @@ export const PlayerRoster = () => {
 
   return (
     <div className="grid gap-2 sm:grid-cols-2">
-      {players.map((player) => (
+      {visiblePlayers.map((player) => (
         <div
           key={player.name}
           className="rounded-lg border border-bonewhite-200 bg-white p-3 dark:border-charcoal-700 dark:bg-charcoal-900/60"

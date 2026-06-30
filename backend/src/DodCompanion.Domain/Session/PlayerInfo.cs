@@ -5,4 +5,5 @@ public sealed record PlayerInfo(
     string Name,
     int Kp,
     int UpptackFara,
-    int FinnaDoldaTing);
+    int FinnaDoldaTing,
+    bool IsDm = false);
