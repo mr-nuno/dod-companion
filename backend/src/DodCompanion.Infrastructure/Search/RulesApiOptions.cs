@@ -15,11 +15,25 @@ public sealed class RulesApiOptions
 
     private readonly Dictionary<string, int> _pageModifiers = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// Per-source page offset applied to <c>physicalPageNumber</c>, keyed (case-insensitively) by
+    /// PDF file name. Lookups must stay case-insensitive regardless of how the options are built,
+    /// so the keys are always re-homed into the <see cref="StringComparer.OrdinalIgnoreCase"/>
+    /// backing dictionary.
+    /// </summary>
     public Dictionary<string, int> PageModifiers
     {
         get => _pageModifiers;
         init
         {
+            // The configuration binder populates the *existing* instance (preserving the comparer)
+            // and then hands that same instance back to this setter. Clearing it here would wipe
+            // the data the binder just wrote, binding an empty map — so skip the self-assignment.
+            if (ReferenceEquals(value, _pageModifiers))
+            {
+                return;
+            }
+
             _pageModifiers.Clear();
             if (value != null)
             {
