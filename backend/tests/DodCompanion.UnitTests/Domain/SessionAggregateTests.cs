@@ -32,6 +32,19 @@ public class SessionAggregateTests
     }
 
     [Fact]
+    public void Join_Should_AccumulatePlayers_When_DistinctNames()
+    {
+        var session = SessionAggregate.Create("DRAGON", "join-token-123", DateTimeOffset.UtcNow);
+
+        session.Join(Player("Aragorn"));
+        session.Join(Player("Legolas"));
+
+        session.Players.Count.ShouldBe(2);
+        session.Players.ShouldContain(p => p.Name == "Aragorn");
+        session.Players.ShouldContain(p => p.Name == "Legolas");
+    }
+
+    [Fact]
     public void Join_Should_BeIdempotent_When_SamePlayerJoinsTwice()
     {
         var session = SessionAggregate.Create("DRAGON", "join-token-123", DateTimeOffset.UtcNow);
