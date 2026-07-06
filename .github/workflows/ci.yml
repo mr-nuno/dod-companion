@@ -35,6 +35,26 @@ jobs:
       - name: Test
         run: dotnet test --no-build -c Release --verbosity normal
 
+  mcp:
+    name: MCP Server Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mcp
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: mcp/global.json
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore -c Release
+
   frontend:
     name: Frontend Build
     runs-on: ubuntu-latest
@@ -87,3 +107,33 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}:${{ github.ref_name }}
             ghcr.io/${{ github.repository }}:latest
+
+  docker-mcp:
+    name: Build & Push MCP Image
+    needs: [ mcp ]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Standalone MCP server image, built from the mcp/ Dockerfile.
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./mcp
+          push: true
+          build-args: |
+            VERSION=${{ github.ref_name }}
+          tags: |
+            ghcr.io/${{ github.repository }}/mcp:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}/mcp:latest
