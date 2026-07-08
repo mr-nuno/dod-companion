@@ -37,8 +37,8 @@ const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
 };
 
 // JSON bodies require Content-Type for the BFF to bind them (deviates from the usual no-header rule).
-const jsonBody = (payload: unknown): RequestInit => ({
-  method: 'POST',
+const jsonBody = (payload: unknown, method = 'POST'): RequestInit => ({
+  method,
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify(payload),
 });
@@ -56,8 +56,14 @@ export const apiClient = {
 
   getPlayers: () => request<PlayersResponse>('/sessions/players'),
 
-  createLogEntry: (content: string, tags: string[]) =>
-    request<LogEntry>('/log-entries', jsonBody({ content, tags })),
+  createLogEntry: (title: string, content: string, tags: string[]) =>
+    request<LogEntry>('/log-entries', jsonBody({ title, content, tags })),
+
+  updateLogEntry: (id: string, title: string, content: string, tags: string[]) =>
+    request<LogEntry>(`/log-entries/${encodeURIComponent(id)}`, jsonBody({ title, content, tags }, 'PUT')),
+
+  deleteLogEntry: (id: string) =>
+    request<boolean>(`/log-entries/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 
   getTimeline: () => request<TimelineResponse>('/log-entries'),
 

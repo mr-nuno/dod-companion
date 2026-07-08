@@ -10,10 +10,14 @@ const byTimestamp = (a: LogEntry, b: LogEntry) => a.timestamp.localeCompare(b.ti
 
 const upsert = (entry: LogEntry): void => {
   const current = entries$.value;
-  if (current.some((e) => e.id === entry.id)) {
-    return;
-  }
-  entries$.next([...current, entry].sort(byTimestamp));
+  const next = current.some((e) => e.id === entry.id)
+    ? current.map((e) => (e.id === entry.id ? entry : e))
+    : [...current, entry];
+  entries$.next(next.sort(byTimestamp));
+};
+
+const removeEntry = (id: string): void => {
+  entries$.next(entries$.value.filter((e) => e.id !== id));
 };
 
 export const timelineStore = {
@@ -26,12 +30,16 @@ export const timelineStore = {
 
     if (!subscribed) {
       signalrService.logEntries$.subscribe(upsert);
+      signalrService.logUpdated$.subscribe(upsert);
+      signalrService.logDeleted$.subscribe(removeEntry);
       signalrService.playerJoined$.subscribe((player) => {
         const entry: LogEntry = {
           id: `join-${player.name}-${Date.now()}-${Math.random()}`,
           sessionId: '',
           playerName: player.name,
+          title: '',
           content: 'joined the session',
+          heroImage: '',
           timestamp: new Date().toISOString(),
           tags: ['info'],
         };
@@ -44,8 +52,18 @@ export const timelineStore = {
   },
 
   /** Post a new entry; it arrives back (and to everyone) via the SignalR broadcast. */
-  async post(content: string, tags: string[]): Promise<void> {
-    await apiClient.createLogEntry(content, tags);
+  async post(title: string, content: string, tags: string[]): Promise<void> {
+    await apiClient.createLogEntry(title, content, tags);
+  },
+
+  /** Edit an own entry; the change arrives back (and to everyone) via the SignalR broadcast. */
+  async update(id: string, title: string, content: string, tags: string[]): Promise<void> {
+    await apiClient.updateLogEntry(id, title, content, tags);
+  },
+
+  /** Delete an own entry; the removal arrives back (and to everyone) via the SignalR broadcast. */
+  async remove(id: string): Promise<void> {
+    await apiClient.deleteLogEntry(id);
   },
 
   async reset(): Promise<void> {

@@ -22,7 +22,7 @@ public class CreateLogEntryHandlerTests
     {
         _userSession.IsAuthenticated.Returns(false);
 
-        var result = await CreateHandler().Handle(new CreateLogEntryCommand("hello", []), CancellationToken.None);
+        var result = await CreateHandler().Handle(new CreateLogEntryCommand("", "hello", []), CancellationToken.None);
 
         result.Status.ShouldBe(ResultStatus.Unauthorized);
         await _db.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
@@ -37,13 +37,15 @@ public class CreateLogEntryHandlerTests
         _userSession.PlayerName.Returns("Aragorn");
         _clock.UtcNow.Returns(now);
 
-        var result = await CreateHandler().Handle(new CreateLogEntryCommand("  found gold  ", []), CancellationToken.None);
+        var result = await CreateHandler().Handle(new CreateLogEntryCommand("  A find  ", "  found gold  ", []), CancellationToken.None);
 
         result.IsSuccess.ShouldBeTrue();
+        result.Value.Title.ShouldBe("A find");
         result.Value.Content.ShouldBe("found gold");
         result.Value.PlayerName.ShouldBe("Aragorn");
         result.Value.SessionId.ShouldBe("sessions/1");
         result.Value.Timestamp.ShouldBe(now);
+        result.Value.HeroImage.ShouldBeOneOf([.. LogEntryAggregate.HeroBanners]);
 
         await _db.Received(1).StoreAsync(Arg.Any<LogEntryAggregate>(), Arg.Any<CancellationToken>());
         await _db.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());

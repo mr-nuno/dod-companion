@@ -17,5 +17,7 @@ public sealed class RavenDbContext(IAsyncDocumentSession session) : IApplication
     public Task StoreAsync<T>(T entity, CancellationToken ct) where T : class =>
         session.StoreAsync(entity, ct);
 
+    public void Delete<T>(T entity) where T : class => session.Delete(entity);
+
     public Task SaveChangesAsync(CancellationToken ct) => session.SaveChangesAsync(ct);
 }

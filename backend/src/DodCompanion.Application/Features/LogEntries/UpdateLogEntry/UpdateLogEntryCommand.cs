@@ -5,55 +5,59 @@ using DodCompanion.Domain.LogEntry;
 using FluentValidation;
 using MediatR;
 
-namespace DodCompanion.Application.Features.LogEntries.CreateLogEntry;
+namespace DodCompanion.Application.Features.LogEntries.UpdateLogEntry;
 
 /// <summary>
-/// Creates a timeline log entry for the current player's session, then broadcasts it to connected players.
+/// Revises an existing timeline entry, then broadcasts the change to connected players.
+/// Only the entry's original author (same session + player name) may edit it.
 /// Session and player are taken from the auth cookie via <see cref="IUserSession"/> — never from the request.
 /// </summary>
-public sealed record CreateLogEntryCommand(string Title, string Content, IReadOnlyList<string> Tags) : IRequest<Result<LogEntryDto>>
+public sealed record UpdateLogEntryCommand(string Id, string Title, string Content, IReadOnlyList<string> Tags) : IRequest<Result<LogEntryDto>>
 {
     public sealed class Handler(
         IApplicationDbContext db,
         IUserSession userSession,
         IDateTimeProvider clock,
-        ITimelineNotifier notifier) : IRequestHandler<CreateLogEntryCommand, Result<LogEntryDto>>
+        ITimelineNotifier notifier) : IRequestHandler<UpdateLogEntryCommand, Result<LogEntryDto>>
     {
-        public async Task<Result<LogEntryDto>> Handle(CreateLogEntryCommand request, CancellationToken ct)
+        public async Task<Result<LogEntryDto>> Handle(UpdateLogEntryCommand request, CancellationToken ct)
         {
             if (!userSession.IsAuthenticated || userSession.SessionId is null || userSession.PlayerName is null)
             {
                 return Result.Unauthorized();
             }
 
-            var heroImage = LogEntryAggregate.HeroBanners[Random.Shared.Next(LogEntryAggregate.HeroBanners.Count)];
+            var entry = await db.LoadAsync<LogEntryAggregate>(request.Id, ct);
+            if (entry is null)
+            {
+                return Result.NotFound();
+            }
 
-            var entry = LogEntryAggregate.Create(
-                userSession.SessionId,
-                userSession.PlayerName,
-                request.Title.Trim(),
-                request.Content.Trim(),
-                heroImage,
-                clock.UtcNow,
-                request.Tags);
+            if (entry.SessionId != userSession.SessionId || entry.PlayerName != userSession.PlayerName)
+            {
+                return Result.Forbidden();
+            }
 
-            await db.StoreAsync(entry, ct);
+            entry.Edit(request.Title.Trim(), request.Content.Trim(), request.Tags, clock.UtcNow);
             await db.SaveChangesAsync(ct);
 
             var dto = entry.ToDto();
-            await notifier.LogEntryCreatedAsync(dto.SessionId, dto, ct);
+            await notifier.LogEntryUpdatedAsync(dto.SessionId, dto, ct);
 
             return Result.Success(dto);
         }
     }
 
-    public sealed class Validator : AbstractValidator<CreateLogEntryCommand>
+    public sealed class Validator : AbstractValidator<UpdateLogEntryCommand>
     {
         private static readonly HashSet<string> AllowedTags = new(StringComparer.OrdinalIgnoreCase)
             { "Strid", "Loot", "Event", "Anteckning", "Dödsfall", "info" };
 
         public Validator()
         {
+            RuleFor(x => x.Id)
+                .NotEmpty().WithMessage("Log entry id is required.");
+
             RuleFor(x => x.Title)
                 .MaximumLength(120).WithMessage("Title must be 120 characters or fewer.");
 

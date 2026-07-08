@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import Markdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeSanitize from 'rehype-sanitize';
+import { MarkdownEditor } from '@components/MarkdownEditor';
 import { useTimeline } from '@hooks/useTimeline';
+import type { LogEntry } from '@/types';
 
 const PREDEFINED_TAGS = ['Strid', 'Loot', 'Event', 'Anteckning', 'Dödsfall'] as const;
 
@@ -14,12 +13,23 @@ const TAG_ACTIVE: Record<string, string> = {
   Event: 'bg-charcoal-600 text-white border-charcoal-600',
 };
 
-export const LogEntryForm = () => {
-  const { post } = useTimeline();
-  const [content, setContent] = useState('');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [mode, setMode] = useState<'write' | 'preview'>('write');
+interface LogEntryFormProps {
+  /** When provided, the form edits this entry instead of creating a new one. */
+  entry?: LogEntry;
+  /** Called after a successful edit save or a cancel (edit mode only). */
+  onDone?: () => void;
+}
+
+export const LogEntryForm = ({ entry, onDone }: LogEntryFormProps) => {
+  const { post, update } = useTimeline();
+  const isEdit = entry !== undefined;
+
+  const [title, setTitle] = useState(entry?.title ?? '');
+  const [content, setContent] = useState(entry?.content ?? '');
+  const [selectedTags, setSelectedTags] = useState<string[]>(entry?.tags ?? []);
   const [submitting, setSubmitting] = useState(false);
+  // Bumped after a create to remount the editor and clear its content.
+  const [editorKey, setEditorKey] = useState(0);
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -29,15 +39,22 @@ export const LogEntryForm = () => {
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const trimmed = content.trim();
-    if (!trimmed) return;
+    const trimmedContent = content.trim();
+    const trimmedTitle = title.trim();
+    if (!trimmedContent) return;
 
     setSubmitting(true);
     try {
-      await post(trimmed, selectedTags);
-      setContent('');
-      setSelectedTags([]);
-      setMode('write');
+      if (isEdit) {
+        await update(entry.id, trimmedTitle, trimmedContent, selectedTags);
+        onDone?.();
+      } else {
+        await post(trimmedTitle, trimmedContent, selectedTags);
+        setTitle('');
+        setContent('');
+        setSelectedTags([]);
+        setEditorKey((k) => k + 1);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -45,6 +62,15 @@ export const LogEntryForm = () => {
 
   return (
     <form onSubmit={onSubmit} className="space-y-2">
+      <input
+        type="text"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="Title (optional)"
+        maxLength={120}
+        className="w-full rounded-lg border border-bonewhite-200 bg-bonewhite-50 px-3 py-2 text-base font-semibold text-charcoal-900 outline-none placeholder:font-normal focus:border-dragongreen-500 dark:border-charcoal-600 dark:bg-charcoal-950 dark:text-bonewhite-200"
+      />
+
       <div className="flex flex-wrap gap-1">
         {PREDEFINED_TAGS.map((tag) => {
           const active = selectedTags.includes(tag);
@@ -65,52 +91,27 @@ export const LogEntryForm = () => {
         })}
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-bonewhite-200 dark:border-charcoal-600">
-        <div className="flex border-b border-bonewhite-200 dark:border-charcoal-600">
-          {(['write', 'preview'] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => setMode(m)}
-              className={`px-4 py-1.5 text-xs font-semibold capitalize transition ${
-                mode === m
-                  ? 'bg-bonewhite-100 text-charcoal-900 dark:bg-charcoal-800 dark:text-bonewhite-200'
-                  : 'text-charcoal-400 hover:text-charcoal-700 dark:text-bonewhite-400 dark:hover:text-bonewhite-200'
-              }`}
-            >
-              {m}
-            </button>
-          ))}
-        </div>
+      <MarkdownEditor key={editorKey} value={entry?.content ?? ''} onChange={setContent} />
 
-        {mode === 'write' ? (
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Log an event, note, or loot… (markdown supported)"
-            rows={3}
-            className="w-full resize-none bg-bonewhite-50 px-3 py-2 text-sm text-charcoal-900 outline-none dark:bg-charcoal-950 dark:text-bonewhite-500"
-          />
-        ) : (
-          <div className="prose prose-sm min-h-[5rem] max-w-none px-3 py-2 dark:prose-invert">
-            {content.trim() ? (
-              <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>
-                {content}
-              </Markdown>
-            ) : (
-              <span className="text-charcoal-400 dark:text-bonewhite-300/40">Nothing to preview.</span>
-            )}
-          </div>
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          disabled={submitting || content.trim().length === 0}
+          className="rounded-lg bg-dragongreen-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-dragongreen-500 disabled:opacity-50"
+        >
+          {submitting ? 'Saving…' : isEdit ? 'Save changes' : 'Add to timeline'}
+        </button>
+        {isEdit && (
+          <button
+            type="button"
+            onClick={() => onDone?.()}
+            disabled={submitting}
+            className="rounded-lg border border-bonewhite-300 px-4 py-2 text-sm font-semibold text-charcoal-600 transition hover:border-charcoal-400 disabled:opacity-50 dark:border-charcoal-600 dark:text-bonewhite-300"
+          >
+            Cancel
+          </button>
         )}
       </div>
-
-      <button
-        type="submit"
-        disabled={submitting || content.trim().length === 0}
-        className="rounded-lg bg-dragongreen-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-dragongreen-500 disabled:opacity-50"
-      >
-        {submitting ? 'Logging…' : 'Add to timeline'}
-      </button>
     </form>
   );
 };

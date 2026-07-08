@@ -8,6 +8,9 @@ public sealed record LogEntryDto(
     string Id,
     string SessionId,
     string PlayerName,
+    string Title,
     string Content,
+    string HeroImage,
     DateTimeOffset Timestamp,
+    DateTimeOffset? UpdatedAt,
     IReadOnlyList<string> Tags);

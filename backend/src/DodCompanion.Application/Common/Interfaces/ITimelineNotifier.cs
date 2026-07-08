@@ -10,5 +10,7 @@ namespace DodCompanion.Application.Common.Interfaces;
 public interface ITimelineNotifier
 {
     Task LogEntryCreatedAsync(string sessionId, LogEntryDto entry, CancellationToken ct);
+    Task LogEntryUpdatedAsync(string sessionId, LogEntryDto entry, CancellationToken ct);
+    Task LogEntryDeletedAsync(string sessionId, string entryId, CancellationToken ct);
     Task PlayerJoinedAsync(string sessionId, PlayerInfo player, CancellationToken ct);
 }
