@@ -19,18 +19,44 @@ export const JoinPage = ({ token }: JoinPageProps) => {
   const [, navigate] = useLocation();
 
   const [playerName, setPlayerName] = useState('');
-  const [kp, setKp] = useState<number>(10);
-  const [upptackFara, setUpptackFara] = useState<number>(10);
-  const [finnaDoldaTing, setFinnaDoldaTing] = useState<number>(10);
+  const [kp, setKp] = useState<number | ''>(10);
+  const [upptackFara, setUpptackFara] = useState<number | ''>(10);
+  const [finnaDoldaTing, setFinnaDoldaTing] = useState<number | ''>(10);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const handleNumberChange = (
+    value: string,
+    setter: React.Dispatch<React.SetStateAction<number | ''>>,
+  ) => {
+    if (value === '') {
+      setter('');
+      return;
+    }
+    const num = Number(value);
+    if (!Number.isNaN(num)) {
+      setter(num);
+    }
+  };
+
+  const handleNumberBlur = (
+    value: number | '',
+    setter: React.Dispatch<React.SetStateAction<number | ''>>,
+  ) => {
+    if (value === '' || value < 1) {
+      setter(1);
+    }
+  };
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
     setSubmitting(true);
+    const resolvedKp = typeof kp === 'number' && kp >= 1 ? kp : 1;
+    const resolvedUf = typeof upptackFara === 'number' && upptackFara >= 1 ? upptackFara : 1;
+    const resolvedFdt = typeof finnaDoldaTing === 'number' && finnaDoldaTing >= 1 ? finnaDoldaTing : 1;
     try {
-      await join(token, playerName.trim(), kp, upptackFara, finnaDoldaTing, false);
+      await join(token, playerName.trim(), resolvedKp, resolvedUf, resolvedFdt, false);
       navigate('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not join.');
@@ -74,9 +100,11 @@ export const JoinPage = ({ token }: JoinPageProps) => {
             <span className={labelClass}>KP</span>
             <input
               type="number"
+              inputMode="numeric"
               min="1"
               value={kp}
-              onChange={(e) => setKp(Math.max(1, Number(e.target.value)))}
+              onChange={(e) => handleNumberChange(e.target.value, setKp)}
+              onBlur={() => handleNumberBlur(kp, setKp)}
               className={inputClass}
               required
             />
@@ -85,9 +113,11 @@ export const JoinPage = ({ token }: JoinPageProps) => {
             <span className={labelClass}>UF</span>
             <input
               type="number"
+              inputMode="numeric"
               min="1"
               value={upptackFara}
-              onChange={(e) => setUpptackFara(Math.max(1, Number(e.target.value)))}
+              onChange={(e) => handleNumberChange(e.target.value, setUpptackFara)}
+              onBlur={() => handleNumberBlur(upptackFara, setUpptackFara)}
               className={inputClass}
               required
             />
@@ -96,9 +126,11 @@ export const JoinPage = ({ token }: JoinPageProps) => {
             <span className={labelClass}>FDT</span>
             <input
               type="number"
+              inputMode="numeric"
               min="1"
               value={finnaDoldaTing}
-              onChange={(e) => setFinnaDoldaTing(Math.max(1, Number(e.target.value)))}
+              onChange={(e) => handleNumberChange(e.target.value, setFinnaDoldaTing)}
+              onBlur={() => handleNumberBlur(finnaDoldaTing, setFinnaDoldaTing)}
               className={inputClass}
               required
             />
