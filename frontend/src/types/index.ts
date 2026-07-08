@@ -12,13 +12,6 @@ export interface Session {
   joinToken: string;
 }
 
-// A freshly provisioned room, before any player has joined it.
-export interface CreatedRoom {
-  sessionId: string;
-  roomCode: string;
-  joinToken: string;
-}
-
 export interface LogEntry {
   id: string;
   sessionId: string;

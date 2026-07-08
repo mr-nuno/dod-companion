@@ -33,12 +33,37 @@ services:
       Raven__DatabaseName: DodCompanion
       RulesApi__BaseUrl: https://pdf-search-api-1-0-0.onrender.com
       RulesApi__CacheSeconds: "60"
-      Sessions__CreateKey: abc123
+      # Public URL the magic link points at (this app serves the SPA same-origin).
+      Sessions__AppBaseUrl: http://localhost:8081
+      Sessions__MagicLinkTtlMinutes: "15"
+      # Allowlisted Game Master (SL) emails + the Resend API key come from backend/.env:
+      #   Sessions__AllowedDmEmails__0=you@example.com
+      #   Resend__ApiKey=re_...
+      Resend__FromEmail: onboarding@resend.dev
+      Resend__FromName: DoD Companion
     depends_on:
       ravendb:
         condition: service_healthy
     ports:
       - "8081:8080"
+
+  # MCP server: a stateless SSE proxy over the external Rules API (no DB dependency).
+  mcp:
+    build:
+      context: ./mcp
+      args:
+        VERSION: 1.0.0
+    # Secrets live in mcp/.env, loaded into the container.
+    # Copy mcp/.env.example to mcp/.env and set RulesApi__Auth__ClientSecret (+ Logto__Audience).
+    env_file:
+      - path: ./mcp/.env
+        required: false
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      RulesApi__BaseUrl: https://pdf-search-api-1-0-0.onrender.com
+      Logto__Authority: https://auth.pewi.se/oidc
+    ports:
+      - "8082:8080"
 
 volumes:
   ravendb-data:

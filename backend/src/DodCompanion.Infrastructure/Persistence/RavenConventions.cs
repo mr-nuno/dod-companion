@@ -1,5 +1,6 @@
 using DodCompanion.Domain.LogEntry;
 using DodCompanion.Domain.Session;
+using DodCompanion.Domain.SessionLink;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Conventions;
 
@@ -25,6 +26,11 @@ public static class RavenConventions
             if (type == typeof(LogEntryAggregate))
             {
                 return "LogEntries";
+            }
+
+            if (type == typeof(SessionLinkAggregate))
+            {
+                return "SessionLinks";
             }
 
             return DocumentConventions.DefaultGetCollectionName(type);
