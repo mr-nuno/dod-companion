@@ -18,6 +18,9 @@ public interface IApplicationDbContext
     /// <summary>Stage a new document for insertion; RavenDB assigns its id here.</summary>
     Task StoreAsync<T>(T entity, CancellationToken ct) where T : class;
 
+    /// <summary>Stage a document for deletion; committed on <see cref="SaveChangesAsync"/>.</summary>
+    void Delete<T>(T entity) where T : class;
+
     /// <summary>Flush all staged changes as a single unit of work.</summary>
     Task SaveChangesAsync(CancellationToken ct);
 }

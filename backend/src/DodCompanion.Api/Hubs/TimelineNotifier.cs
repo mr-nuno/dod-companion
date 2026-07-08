@@ -11,6 +11,12 @@ public sealed class TimelineNotifier(IHubContext<TimelineHub> hubContext) : ITim
     public Task LogEntryCreatedAsync(string sessionId, LogEntryDto entry, CancellationToken ct) =>
         hubContext.Clients.Group(sessionId).SendAsync(TimelineHub.LogEntryCreatedEvent, entry, ct);
 
+    public Task LogEntryUpdatedAsync(string sessionId, LogEntryDto entry, CancellationToken ct) =>
+        hubContext.Clients.Group(sessionId).SendAsync(TimelineHub.LogEntryUpdatedEvent, entry, ct);
+
+    public Task LogEntryDeletedAsync(string sessionId, string entryId, CancellationToken ct) =>
+        hubContext.Clients.Group(sessionId).SendAsync(TimelineHub.LogEntryDeletedEvent, entryId, ct);
+
     public Task PlayerJoinedAsync(string sessionId, PlayerInfo player, CancellationToken ct) =>
         hubContext.Clients.Group(sessionId).SendAsync(TimelineHub.PlayerJoinedEvent, player, ct);
 }

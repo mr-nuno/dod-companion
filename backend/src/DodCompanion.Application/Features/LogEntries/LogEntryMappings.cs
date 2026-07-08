@@ -7,5 +7,5 @@ namespace DodCompanion.Application.Features.LogEntries;
 public static class LogEntryMappings
 {
     public static LogEntryDto ToDto(this LogEntryAggregate entry) =>
-        new(entry.Id, entry.SessionId, entry.PlayerName, entry.Content, entry.Timestamp, entry.Tags);
+        new(entry.Id, entry.SessionId, entry.PlayerName, entry.Title, entry.Content, entry.HeroImage, entry.Timestamp, entry.UpdatedAt, entry.Tags);
 }

@@ -8,6 +8,8 @@ export const useTimeline = () => {
     entries,
     load: timelineStore.load,
     post: timelineStore.post,
+    update: timelineStore.update,
+    remove: timelineStore.remove,
     reset: timelineStore.reset,
   };
 };

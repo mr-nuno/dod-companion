@@ -23,8 +23,11 @@ export interface LogEntry {
   id: string;
   sessionId: string;
   playerName: string;
+  title: string;
   content: string;
+  heroImage: string;
   timestamp: string;
+  updatedAt?: string;
   tags: string[];
 }
 
