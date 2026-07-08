@@ -6,7 +6,8 @@ export const useSession = () => {
 
   return {
     session,
-    create: sessionStore.create,
+    requestCreateLink: sessionStore.requestCreateLink,
+    consumeCreateLink: sessionStore.consumeCreateLink,
     join: sessionStore.join,
     logout: sessionStore.logout,
     loadMe: sessionStore.loadMe,

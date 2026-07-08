@@ -17,22 +17,31 @@ public class SessionFlowTests(DodCompanionApiFactory factory) : IClassFixture<Do
         return factory.CreateClient();
     }
 
-    // Provisions a room with the configured host key. Creation alone does NOT authenticate the client.
-    private static async Task<CreatedRoomBody> CreateRoomAsync(HttpClient client, string roomName)
+    // Provisions a room via the magic-link flow on a throwaway SL client (request → capture link → consume).
+    // The room is created and the SL is added as a DM player; the returned body carries the join token.
+    private async Task<CreatedRoomBody> CreateRoomAsync(string roomName)
     {
-        var response = await client.PostAsJsonAsync("/sessions/create",
-            new CreateSessionRequestBody(roomName, DodCompanionApiFactory.HostKey));
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var slClient = CreateClient();
 
-        var created = await response.Content.ReadFromJsonAsync<ApiResponse<CreatedRoomBody>>();
+        var request = await slClient.PostAsJsonAsync("/sessions/request-create",
+            new RequestCreateBody(DodCompanionApiFactory.AllowedEmail, roomName));
+        request.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var token = factory.Emails.DequeueToken();
+
+        var consume = await slClient.PostAsJsonAsync("/sessions/consume-create", new ConsumeCreateBody(token));
+        consume.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var created = await consume.Content.ReadFromJsonAsync<ApiResponse<SessionBody>>();
         created!.Success.ShouldBeTrue();
-        return created.Data!;
+        var s = created.Data!;
+        return new CreatedRoomBody(s.SessionId, s.RoomCode, s.JoinToken);
     }
 
-    // Creates a room and joins it as the named player, signing the client in via cookie.
-    private static async Task<SessionBody> EnterRoomAsync(HttpClient client, string roomName, string playerName)
+    // Creates a room and joins it as the named player on the given client, signing that client in via cookie.
+    private async Task<SessionBody> EnterRoomAsync(HttpClient client, string roomName, string playerName)
     {
-        var room = await CreateRoomAsync(client, roomName);
+        var room = await CreateRoomAsync(roomName);
 
         var joinResponse = await client.PostAsJsonAsync("/sessions/join",
             new JoinSessionRequestBody(room.JoinToken, playerName));
@@ -61,33 +70,57 @@ public class SessionFlowTests(DodCompanionApiFactory factory) : IClassFixture<Do
     }
 
     [SkippableFact]
-    public async Task Create_Should_NotAuthenticate_Until_Joined()
+    public async Task ConsumeCreateLink_Should_SignInAsSL()
     {
         var client = CreateClient();
 
-        await CreateRoomAsync(client, "lobby-room");
+        var request = await client.PostAsJsonAsync("/sessions/request-create",
+            new RequestCreateBody(DodCompanionApiFactory.AllowedEmail, "sl-room"));
+        request.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        // Provisioning a room must not sign anyone in — a player only exists after joining via the token.
-        var me = await client.GetAsync("/sessions/me");
-        me.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        var token = factory.Emails.DequeueToken();
+        var consume = await client.PostAsJsonAsync("/sessions/consume-create", new ConsumeCreateBody(token));
+        consume.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        // Consuming the link creates the room and signs the clicker in as the Game Master (SL).
+        var me = await client.GetFromJsonAsync<ApiResponse<SessionBody>>("/sessions/me");
+        me!.Success.ShouldBeTrue();
+        me.Data!.PlayerName.ShouldBe("SL");
+        me.Data.RoomCode.ShouldBe("SL-ROOM");
     }
 
     [SkippableFact]
-    public async Task Create_Should_Return403_When_HostKeyWrong()
+    public async Task RequestCreate_Should_Fail_When_EmailNotAllowed()
     {
         var client = CreateClient();
 
-        var response = await client.PostAsJsonAsync("/sessions/create",
-            new CreateSessionRequestBody("locked-room", "wrong-key"));
+        var response = await client.PostAsJsonAsync("/sessions/request-create",
+            new RequestCreateBody("intruder@example.com", "locked-room"));
 
-        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [SkippableFact]
+    public async Task ConsumeCreateLink_Should_Fail_When_TokenReused()
+    {
+        var client = CreateClient();
+
+        var request = await client.PostAsJsonAsync("/sessions/request-create",
+            new RequestCreateBody(DodCompanionApiFactory.AllowedEmail, "once-room"));
+        request.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var token = factory.Emails.DequeueToken();
+        (await client.PostAsJsonAsync("/sessions/consume-create", new ConsumeCreateBody(token))).StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        // A magic link is single-use.
+        var reuse = await CreateClient().PostAsJsonAsync("/sessions/consume-create", new ConsumeCreateBody(token));
+        reuse.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [SkippableFact]
     public async Task Join_Should_AddSecondPlayer_To_SameSession_ViaToken()
     {
-        var hostClient = CreateClient();
-        var room = await CreateRoomAsync(hostClient, "fellowship");
+        var room = await CreateRoomAsync("fellowship");
 
         var joinerClient = CreateClient();
         var joinResponse = await joinerClient.PostAsJsonAsync("/sessions/join",
@@ -115,7 +148,9 @@ public class SessionFlowTests(DodCompanionApiFactory factory) : IClassFixture<Do
 
         var players = await hostClient.GetFromJsonAsync<ApiResponse<PlayersBody>>("/sessions/players");
         players!.Success.ShouldBeTrue();
-        players.Data!.Players.Count.ShouldBe(2);
+        // Roster carries the Game Master (SL, added on room creation) plus both joined players.
+        players.Data!.Players.Count.ShouldBe(3);
+        players.Data.Players.ShouldContain(p => p.Name == "SL");
         players.Data.Players.ShouldContain(p => p.Name == "Frodo");
         players.Data.Players.ShouldContain(p => p.Name == "Sam");
     }
@@ -204,7 +239,8 @@ public class SessionFlowTests(DodCompanionApiFactory factory) : IClassFixture<Do
     }
 
     // Local request/response shapes (avoid coupling tests to API endpoint records).
-    private sealed record CreateSessionRequestBody(string RoomName, string HostKey);
+    private sealed record RequestCreateBody(string Email, string RoomName);
+    private sealed record ConsumeCreateBody(string Token);
     private sealed record JoinSessionRequestBody(string JoinToken, string PlayerName, int Kp = 10, int UpptackFara = 10, int FinnaDoldaTing = 10);
     private sealed record CreateLogEntryBody(string Content, List<string>? Tags = null);
     private sealed record CreatedRoomBody(string SessionId, string RoomCode, string JoinToken);

@@ -1,6 +1,7 @@
 using DodCompanion.Api.Auth;
 using DodCompanion.Api.Hubs;
 using DodCompanion.Application.Common.Interfaces;
+using SessionOptions = DodCompanion.Application.Common.Configuration.SessionOptions;
 using FastEndpoints;
 using FastEndpoints.Swagger;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -17,6 +18,9 @@ public static class DependencyInjection
         services.AddHttpContextAccessor();
         services.AddScoped<IUserSession, CookieUserSession>();
         services.AddSingleton<ITimelineNotifier, TimelineNotifier>();
+
+        // Session/room-creation policy (allowlist, magic-link TTL, app base URL) as a bound singleton POCO.
+        services.AddSingleton(configuration.GetSection(SessionOptions.SectionName).Get<SessionOptions>() ?? new SessionOptions());
 
         AddCookieAuth(services);
         AddCorsPolicy(services, configuration);

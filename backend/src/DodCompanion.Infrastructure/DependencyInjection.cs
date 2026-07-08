@@ -1,5 +1,6 @@
 using System.Security.Cryptography.X509Certificates;
 using DodCompanion.Application.Common.Interfaces;
+using DodCompanion.Infrastructure.Email;
 using DodCompanion.Infrastructure.Persistence;
 using DodCompanion.Infrastructure.Search;
 using DodCompanion.Infrastructure.Security;
@@ -23,11 +24,28 @@ public static class DependencyInjection
     {
         AddPersistence(services, configuration);
         AddRulesSearch(services, configuration);
+        AddEmail(services, configuration);
 
         services.AddSingleton<IDateTimeProvider, SystemDateTimeProvider>();
         services.AddSingleton<ITokenGenerator, CryptoTokenGenerator>();
 
         return services;
+    }
+
+    private static void AddEmail(IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<ResendOptions>(configuration.GetSection(ResendOptions.SectionName));
+
+        services.AddHttpClient<IEmailSender, ResendEmailSender>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<ResendOptions>>().Value;
+            client.BaseAddress = new Uri("https://api.resend.com");
+            if (!string.IsNullOrWhiteSpace(options.ApiKey))
+            {
+                client.DefaultRequestHeaders.Authorization = new("Bearer", options.ApiKey);
+            }
+        })
+        .AddStandardResilienceHandler();
     }
 
     private static void AddPersistence(IServiceCollection services, IConfiguration configuration)

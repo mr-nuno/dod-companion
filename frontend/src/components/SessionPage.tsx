@@ -64,17 +64,18 @@ export const SessionPage = ({ session }: SessionPageProps) => {
             </span>
           </div>
           <div className="hidden border-l border-bonewhite-300 pl-8 dark:border-charcoal-700 md:block">
-            <div
-              className="cursor-help overflow-hidden rounded-xl bg-white p-2 shadow-sm transition-transform hover:scale-105"
-              title={`Room: ${session.roomCode} — scan to join`}
+            <Link
+              href={`/join?token=${session.joinToken}`}
+              className="block cursor-pointer overflow-hidden rounded-xl bg-white p-2 shadow-sm transition-transform hover:scale-105"
+              title={`Room: ${session.roomCode} — open the shareable join QR`}
             >
               <QRCodeSVG
-                value={`${window.location.origin}/?join=${session.joinToken}`}
+                value={`${window.location.origin}/join/${session.joinToken}`}
                 size={80}
                 bgColor="#ffffff"
                 fgColor="#1c1c1c"
               />
-            </div>
+            </Link>
           </div>
         </div>
 
@@ -138,6 +139,13 @@ export const SessionPage = ({ session }: SessionPageProps) => {
           </Link>
           <Link href="/rules" onClick={closeDrawer} className={navLinkClass('/rules')}>
             Rules Reference
+          </Link>
+          <Link
+            href={`/join?token=${session.joinToken}`}
+            onClick={closeDrawer}
+            className={navLinkClass('/join')}
+          >
+            Join QR
           </Link>
         </nav>
 

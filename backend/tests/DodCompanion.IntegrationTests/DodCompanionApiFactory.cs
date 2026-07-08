@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
 using Ardalis.Result;
 using DodCompanion.Application.Common.Dtos;
 using DodCompanion.Application.Common.Interfaces;
@@ -21,20 +23,27 @@ public sealed class DodCompanionApiFactory : WebApplicationFactory<Program>
 
     public string DatabaseName { get; } = $"DodCompanion_Test_{Guid.NewGuid():N}";
 
-    /// <summary>The host key the test factory configures so tests can create rooms.</summary>
-    public const string HostKey = "test-host-key";
+    /// <summary>The allowlisted Game Master email the test factory configures so tests can create rooms.</summary>
+    public const string AllowedEmail = "sl@example.com";
+
+    /// <summary>Captures the magic links that would have been emailed, so tests can consume them.</summary>
+    public CapturingEmailSender Emails { get; } = new();
 
     protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
     {
         builder.UseSetting("Raven:Urls:0", RavenUrl);
         builder.UseSetting("Raven:DatabaseName", DatabaseName);
         builder.UseSetting("Cors:AllowedOrigins:0", "http://localhost");
-        builder.UseSetting("Sessions:CreateKey", HostKey);
+        builder.UseSetting("Sessions:AllowedDmEmails:0", AllowedEmail);
+        builder.UseSetting("Sessions:AppBaseUrl", "http://localhost");
 
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<IRulesSearchClient>();
             services.AddScoped<IRulesSearchClient, StubRulesSearchClient>();
+
+            services.RemoveAll<IEmailSender>();
+            services.AddSingleton<IEmailSender>(Emails);
         });
     }
 
@@ -69,6 +78,27 @@ public sealed class DodCompanionApiFactory : WebApplicationFactory<Program>
         }
 
         base.Dispose(disposing);
+    }
+
+    /// <summary>Test double for <see cref="IEmailSender"/> that captures the magic-link token from each email.</summary>
+    public sealed class CapturingEmailSender : IEmailSender
+    {
+        private readonly ConcurrentQueue<string> _tokens = new();
+
+        public Task SendAsync(string toEmail, string subject, string htmlBody, CancellationToken ct)
+        {
+            var match = Regex.Match(htmlBody, @"/create\?token=([^""&]+)");
+            if (match.Success)
+            {
+                _tokens.Enqueue(match.Groups[1].Value);
+            }
+
+            return Task.CompletedTask;
+        }
+
+        /// <summary>Pops the token from the oldest captured email.</summary>
+        public string DequeueToken() =>
+            _tokens.TryDequeue(out var token) ? token : throw new InvalidOperationException("No magic link was captured.");
     }
 
     private sealed class StubRulesSearchClient : IRulesSearchClient
